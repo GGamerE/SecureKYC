@@ -1,0 +1,197 @@
+import { task } from "hardhat/config";
+import type { TaskArguments } from "hardhat/types";
+
+task("submit-kyc", "Submit KYC data for verification")
+  .addParam("contract", "The SecureKYC contract address")
+  .addParam("passport", "Passport number (will be hashed)")
+  .addParam("birthyear", "Birth year (e.g., 1990)")
+  .addParam("country", "Country code (1-255)")
+  .setAction(async function (taskArguments: TaskArguments, { ethers, fhevm }) {
+    const { contract: contractAddress, passport, birthyear, country } = taskArguments;
+
+    const [signer] = await ethers.getSigners();
+    console.log("Submitting KYC data with account:", signer.address);
+
+    const contract = await ethers.getContractAt("SecureKYC", contractAddress);
+
+    // Hash the passport number for privacy
+    const passportHash = BigInt(ethers.keccak256(ethers.toUtf8Bytes(passport)));
+    
+    // Create encrypted input
+    const input = fhevm.createEncryptedInput(contractAddress, signer.address);
+    input.add256(passportHash);
+    input.add32(BigInt(birthyear));
+    input.add8(BigInt(country));
+
+    const encryptedInput = await input.encrypt();
+
+    const transaction = await contract.submitKYC(
+      encryptedInput.handles[0], // passport hash
+      encryptedInput.handles[1], // birth year
+      encryptedInput.handles[2], // country code
+      encryptedInput.inputProof
+    );
+
+    await transaction.wait();
+    console.log("KYC data submitted successfully!");
+    console.log("Transaction hash:", transaction.hash);
+  });
+
+task("verify-kyc", "Verify a user's KYC data (authorized verifiers only)")
+  .addParam("contract", "The SecureKYC contract address")
+  .addParam("user", "The user's address to verify")
+  .setAction(async function (taskArguments: TaskArguments, { ethers }) {
+    const { contract: contractAddress, user } = taskArguments;
+
+    const [signer] = await ethers.getSigners();
+    console.log("Verifying KYC with account:", signer.address);
+
+    const contract = await ethers.getContractAt("SecureKYC", contractAddress);
+
+    const transaction = await contract.verifyKYC(user);
+    await transaction.wait();
+
+    console.log(`KYC verified for user: ${user}`);
+    console.log("Transaction hash:", transaction.hash);
+  });
+
+task("set-project-requirements", "Set requirements for a project")
+  .addParam("contract", "The SecureKYC contract address")
+  .addParam("projectid", "Project identifier (string)")
+  .addParam("minage", "Minimum age requirement")
+  .addParam("countries", "Allowed country codes (comma-separated, e.g., 1,2,3)")
+  .addParam("passport", "Require passport (true/false)")
+  .setAction(async function (taskArguments: TaskArguments, { ethers }) {
+    const { contract: contractAddress, projectid, minage, countries, passport } = taskArguments;
+
+    const [signer] = await ethers.getSigners();
+    console.log("Setting project requirements with account:", signer.address);
+
+    const contract = await ethers.getContractAt("SecureKYC", contractAddress);
+
+    const projectIdBytes32 = ethers.id(projectid);
+    const allowedCountries = countries.split(",").map((c: string) => parseInt(c.trim()));
+    const requiresPassport = passport.toLowerCase() === "true";
+
+    const transaction = await contract.setProjectRequirements(
+      projectIdBytes32,
+      parseInt(minage),
+      allowedCountries,
+      requiresPassport
+    );
+
+    await transaction.wait();
+
+    console.log(`Project requirements set for: ${projectid}`);
+    console.log("Project ID (bytes32):", projectIdBytes32);
+    console.log("Minimum age:", minage);
+    console.log("Allowed countries:", allowedCountries);
+    console.log("Requires passport:", requiresPassport);
+    console.log("Transaction hash:", transaction.hash);
+  });
+
+task("check-eligibility", "Check eligibility for a project")
+  .addParam("contract", "The SecureKYC contract address")
+  .addParam("user", "User address to check")
+  .addParam("projectid", "Project identifier")
+  .setAction(async function (taskArguments: TaskArguments, { ethers }) {
+    const { contract: contractAddress, user, projectid } = taskArguments;
+
+    const [signer] = await ethers.getSigners();
+    console.log("Checking eligibility with account:", signer.address);
+
+    const contract = await ethers.getContractAt("SecureKYC", contractAddress);
+
+    const projectIdBytes32 = ethers.id(projectid);
+
+    try {
+      const transaction = await contract.checkEligibility(user, projectIdBytes32);
+      await transaction.wait();
+
+      console.log(`Eligibility checked for user: ${user}`);
+      console.log(`Project: ${projectid}`);
+      console.log("Transaction hash:", transaction.hash);
+      console.log("Note: Result is encrypted. Use frontend to decrypt the result.");
+    } catch (error) {
+      console.error("Error checking eligibility:", error);
+    }
+  });
+
+task("generate-proof", "Generate proof of eligibility for a project")
+  .addParam("contract", "The SecureKYC contract address")
+  .addParam("projectid", "Project identifier")
+  .setAction(async function (taskArguments: TaskArguments, { ethers }) {
+    const { contract: contractAddress, projectid } = taskArguments;
+
+    const [signer] = await ethers.getSigners();
+    console.log("Generating proof with account:", signer.address);
+
+    const contract = await ethers.getContractAt("SecureKYC", contractAddress);
+
+    const projectIdBytes32 = ethers.id(projectid);
+
+    try {
+      const transaction = await contract.generateProof(projectIdBytes32);
+      await transaction.wait();
+
+      console.log(`Proof generated for project: ${projectid}`);
+      console.log("Transaction hash:", transaction.hash);
+      console.log("Note: Proof is encrypted. Use frontend to access the encrypted proof.");
+    } catch (error) {
+      console.error("Error generating proof:", error);
+    }
+  });
+
+task("authorize-verifier", "Authorize or deauthorize a KYC verifier")
+  .addParam("contract", "The SecureKYC contract address")
+  .addParam("verifier", "Verifier address")
+  .addParam("authorized", "true to authorize, false to deauthorize")
+  .setAction(async function (taskArguments: TaskArguments, { ethers }) {
+    const { contract: contractAddress, verifier, authorized } = taskArguments;
+
+    const [signer] = await ethers.getSigners();
+    console.log("Managing verifier authorization with account:", signer.address);
+
+    const contract = await ethers.getContractAt("SecureKYC", contractAddress);
+
+    const isAuthorized = authorized.toLowerCase() === "true";
+
+    const transaction = await contract.setAuthorizedVerifier(verifier, isAuthorized);
+    await transaction.wait();
+
+    console.log(`Verifier ${verifier} ${isAuthorized ? "authorized" : "deauthorized"}`);
+    console.log("Transaction hash:", transaction.hash);
+  });
+
+task("get-verification-status", "Get verification status of a user")
+  .addParam("contract", "The SecureKYC contract address")
+  .addParam("user", "User address")
+  .setAction(async function (taskArguments: TaskArguments, { ethers }) {
+    const { contract: contractAddress, user } = taskArguments;
+
+    const contract = await ethers.getContractAt("SecureKYC", contractAddress);
+
+    const [verified, timestamp, verifier] = await contract.getVerificationStatus(user);
+
+    console.log(`Verification status for ${user}:`);
+    console.log("Verified:", verified);
+    if (verified) {
+      console.log("Verification timestamp:", new Date(Number(timestamp) * 1000).toISOString());
+      console.log("Verified by:", verifier);
+    }
+  });
+
+task("has-project-proof", "Check if user has proof for a project")
+  .addParam("contract", "The SecureKYC contract address")
+  .addParam("user", "User address")
+  .addParam("projectid", "Project identifier")
+  .setAction(async function (taskArguments: TaskArguments, { ethers }) {
+    const { contract: contractAddress, user, projectid } = taskArguments;
+
+    const contract = await ethers.getContractAt("SecureKYC", contractAddress);
+
+    const projectIdBytes32 = ethers.id(projectid);
+    const hasProof = await contract.hasProjectProof(user, projectIdBytes32);
+
+    console.log(`User ${user} has proof for project "${projectid}": ${hasProof}`);
+  });
