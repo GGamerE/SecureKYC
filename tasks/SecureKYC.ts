@@ -3,7 +3,7 @@ import type { TaskArguments } from "hardhat/types";
 
 task("submit-kyc", "Submit KYC data for verification")
   .addOptionalParam("address", "Optionally specify the SecureKYC contract address")
-  .addParam("passport", "Passport number (will be hashed)")
+  .addParam("passport", "Passport number (will be converted to address)")
   .addParam("birthyear", "Birth year (e.g., 1990)")
   .addParam("country", "Country code (1-255)")
   .setAction(async function (taskArguments: TaskArguments, { ethers, fhevm, deployments }) {
@@ -19,19 +19,24 @@ task("submit-kyc", "Submit KYC data for verification")
 
     const contract = await ethers.getContractAt("SecureKYC", secureKYCDeployment.address);
 
-    // Hash the passport number for privacy
-    const passportHash = BigInt(ethers.keccak256(ethers.toUtf8Bytes(passport)));
+    // Convert passport number to address format using keccak256
+    const passportBytes = ethers.toUtf8Bytes(passport);
+    const passportHash = ethers.keccak256(passportBytes);
+    // Take the last 20 bytes (40 hex characters) to create an address
+    const passportAddress = `0x${passportHash.slice(-40)}`;
+    
+    console.log("Passport converted to address:", passportAddress);
     
     // Create encrypted input
     const input = fhevm.createEncryptedInput(secureKYCDeployment.address, signer.address);
-    input.add256(passportHash);
-    input.add32(BigInt(birthyear));
-    input.add8(BigInt(country));
+    input.addAddress(passportAddress); // passport as address
+    input.add32(BigInt(birthyear));     // birth year
+    input.add8(BigInt(country));        // country code
 
     const encryptedInput = await input.encrypt();
 
     const transaction = await contract.submitKYC(
-      encryptedInput.handles[0], // passport hash
+      encryptedInput.handles[0], // passport address
       encryptedInput.handles[1], // birth year
       encryptedInput.handles[2], // country code
       encryptedInput.inputProof
