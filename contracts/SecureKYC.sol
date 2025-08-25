@@ -36,15 +36,15 @@ contract SecureKYC is SepoliaConfig {
 
     mapping(address => EncryptedKYCData) private userKYCData;
     mapping(address => bool) public authorizedVerifiers;
-    mapping(bytes32 => KYCRequirement) public projectRequirements;
-    mapping(address => mapping(bytes32 => bool)) public userProjectEligibility;
+    mapping(address => KYCRequirement) public projectRequirements;
+    mapping(address => mapping(address => bool)) public userProjectEligibility;
 
     address public admin;
 
     event KYCVerified(address indexed user, address indexed verifier, uint256 timestamp);
     event VerifierAuthorized(address indexed verifier, bool authorized);
-    event ProjectRequirementSet(bytes32 indexed projectId, uint32 minAge, bool requiresPassport);
-    event EligibilityChecked(address indexed user, bytes32 indexed projectId, bool eligible);
+    event ProjectRequirementSet(address indexed projectAddress, uint32 minAge, bool requiresPassport);
+    event EligibilityChecked(address indexed user, address indexed projectAddress, bool eligible);
 
     error UnauthorizedVerifier();
     error UserNotVerified();
@@ -118,36 +118,35 @@ contract SecureKYC is SepoliaConfig {
     }
 
     /// @notice Set requirements for a project
-    /// @param projectId Unique identifier for the project
+    /// @param projectAddress Address that will be allowed to check eligibility
     /// @param minAge Minimum age requirement
     /// @param allowedCountries Array of allowed country codes
     /// @param requiresPassport Whether passport verification is required
     function setProjectRequirements(
-        bytes32 projectId,
+        address projectAddress,
         uint32 minAge,
         uint8[] calldata allowedCountries,
         bool requiresPassport
     ) external onlyAuthorizedVerifier {
-        projectRequirements[projectId] = KYCRequirement({
+        projectRequirements[projectAddress] = KYCRequirement({
             minAge: minAge,
             allowedCountries: allowedCountries,
             requiresPassport: requiresPassport,
             isActive: true
         });
 
-        emit ProjectRequirementSet(projectId, minAge, requiresPassport);
+        emit ProjectRequirementSet(projectAddress, minAge, requiresPassport);
     }
 
     /// @notice Check if user meets project requirements without revealing specific data
     /// @param user Address of the user
-    /// @param projectId Project identifier
     /// @return eligible Whether user is eligible (encrypted boolean)
-    function checkEligibility(address user, bytes32 projectId) external returns (ebool eligible) {
+    function checkEligibility(address user) external returns (ebool eligible) {
         if (!userKYCData[user].isVerified) {
             revert UserNotVerified();
         }
 
-        KYCRequirement storage requirements = projectRequirements[projectId];
+        KYCRequirement storage requirements = projectRequirements[msg.sender];
         if (!requirements.isActive) {
             revert InvalidInput();
         }
@@ -180,23 +179,28 @@ contract SecureKYC is SepoliaConfig {
     }
 
     /// @notice Generate a proof of eligibility for a project
-    /// @param projectId Project identifier
+    /// @param projectAddress Address of the project
     /// @return proof Encrypted proof of eligibility
-    function generateProof(bytes32 projectId) external returns (euint256 proof) {
-        ebool eligible = this.checkEligibility(msg.sender, projectId);
+    function generateProof(address projectAddress) external returns (euint256 proof) {
+        // Only the specified project address can check eligibility for users
+        if (!projectRequirements[projectAddress].isActive) {
+            revert InvalidInput();
+        }
+
+        ebool eligible = this.checkEligibility(msg.sender);
 
         euint256 proofValue = FHE.select(
             eligible,
-            FHE.asEuint256(uint256(keccak256(abi.encodePacked(msg.sender, projectId, block.timestamp)))),
+            FHE.asEuint256(uint256(keccak256(abi.encodePacked(msg.sender, projectAddress, block.timestamp)))),
             FHE.asEuint256(0)
         );
 
-        userProjectEligibility[msg.sender][projectId] = true;
+        userProjectEligibility[msg.sender][projectAddress] = true;
 
         FHE.allowThis(proofValue);
         FHE.allow(proofValue, msg.sender);
 
-        emit EligibilityChecked(msg.sender, projectId, true);
+        emit EligibilityChecked(msg.sender, projectAddress, true);
 
         return proofValue;
     }
@@ -233,9 +237,9 @@ contract SecureKYC is SepoliaConfig {
 
     /// @notice Check if user has generated proof for a project
     /// @param user Address of the user
-    /// @param projectId Project identifier
+    /// @param projectAddress Address of the project
     /// @return hasProof Whether user has proof for the project
-    function hasProjectProof(address user, bytes32 projectId) external view returns (bool hasProof) {
-        return userProjectEligibility[user][projectId];
+    function hasProjectProof(address user, address projectAddress) external view returns (bool hasProof) {
+        return userProjectEligibility[user][projectAddress];
     }
 }
