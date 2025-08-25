@@ -116,9 +116,7 @@ contract SecureKYC is SepoliaConfig {
 
     /// @notice Set requirements for a project
     /// @param projectAddress Address that will be allowed to check eligibility
-    function setProjectRequirements(
-        address projectAddress
-    ) external onlyAuthorizedVerifier {
+    function setProjectRequirements(address projectAddress) external onlyAuthorizedVerifier {
         projectRequirements[projectAddress] = true;
 
         emit ProjectRequirementSet(projectAddress);
@@ -183,60 +181,60 @@ contract SecureKYC is SepoliaConfig {
     /// @param allowedCountries Array of allowed country codes
     /// @param requiresPassport Whether passport verification is required
     /// @return proof Encrypted proof of eligibility
-    function generateProof(
-        address projectAddress,
-        uint32 minAge,
-        uint8[] calldata allowedCountries,
-        bool requiresPassport
-    ) external returns (euint256 proof) {
-        if (!projectRequirements[projectAddress]) {
-            revert InvalidInput();
-        }
+    // function generateProof(
+    //     address projectAddress,
+    //     uint32 minAge,
+    //     uint8[] calldata allowedCountries,
+    //     bool requiresPassport
+    // ) external returns (euint256 proof) {
+    //     if (!projectRequirements[projectAddress]) {
+    //         revert InvalidInput();
+    //     }
 
-        if (!userKYCData[msg.sender].isVerified) {
-            revert UserNotVerified();
-        }
+    //     if (!userKYCData[msg.sender].isVerified) {
+    //         revert UserNotVerified();
+    //     }
 
-        // Use the stored encrypted KYC data directly
-        EncryptedKYCData storage userData = userKYCData[msg.sender];
+    //     // Use the stored encrypted KYC data directly
+    //     EncryptedKYCData storage userData = userKYCData[msg.sender];
 
-        // Check age requirement
-        euint32 currentYear = FHE.asEuint32(uint32(block.timestamp / 365 days + 1970));
-        euint32 userAge = FHE.sub(currentYear, userData.birthYear);
-        euint32 requiredMinAge = FHE.asEuint32(minAge);
-        ebool ageEligible = FHE.ge(userAge, requiredMinAge);
+    //     // Check age requirement
+    //     euint32 currentYear = FHE.asEuint32(uint32(block.timestamp / 365 days + 1970));
+    //     euint32 userAge = FHE.sub(currentYear, userData.birthYear);
+    //     euint32 requiredMinAge = FHE.asEuint32(minAge);
+    //     ebool ageEligible = FHE.ge(userAge, requiredMinAge);
 
-        // Check country requirement
-        ebool countryEligible = FHE.asEbool(false);
-        for (uint256 i = 0; i < allowedCountries.length; i++) {
-            euint8 allowedCountry = FHE.asEuint8(allowedCountries[i]);
-            ebool countryAllowed = FHE.eq(userData.countryCode, allowedCountry);
-            countryEligible = FHE.or(countryEligible, countryAllowed);
-        }
+    //     // Check country requirement
+    //     ebool countryEligible = FHE.asEbool(false);
+    //     for (uint256 i = 0; i < allowedCountries.length; i++) {
+    //         euint8 allowedCountry = FHE.asEuint8(allowedCountries[i]);
+    //         ebool countryAllowed = FHE.eq(userData.countryCode, allowedCountry);
+    //         countryEligible = FHE.or(countryEligible, countryAllowed);
+    //     }
 
-        // Check passport requirement
-        ebool passportEligible = FHE.asEbool(true);
-        if (requiresPassport) {
-            passportEligible = FHE.ne(userData.passportAddress, FHE.asEaddress(address(0)));
-        }
+    //     // Check passport requirement
+    //     ebool passportEligible = FHE.asEbool(true);
+    //     if (requiresPassport) {
+    //         passportEligible = FHE.ne(userData.passportAddress, FHE.asEaddress(address(0)));
+    //     }
 
-        ebool eligible = FHE.and(FHE.and(ageEligible, countryEligible), passportEligible);
+    //     ebool eligible = FHE.and(FHE.and(ageEligible, countryEligible), passportEligible);
 
-        euint256 proofValue = FHE.select(
-            eligible,
-            FHE.asEuint256(uint256(keccak256(abi.encodePacked(msg.sender, projectAddress, block.timestamp)))),
-            FHE.asEuint256(0)
-        );
+    //     euint256 proofValue = FHE.select(
+    //         eligible,
+    //         FHE.asEuint256(uint256(keccak256(abi.encodePacked(msg.sender, projectAddress, block.timestamp)))),
+    //         FHE.asEuint256(0)
+    //     );
 
-        userProjectEligibility[msg.sender][projectAddress] = true;
+    //     userProjectEligibility[msg.sender][projectAddress] = true;
 
-        FHE.allowThis(proofValue);
-        FHE.allow(proofValue, msg.sender);
+    //     FHE.allowThis(proofValue);
+    //     FHE.allow(proofValue, msg.sender);
 
-        emit EligibilityChecked(msg.sender, projectAddress, true);
+    //     emit EligibilityChecked(msg.sender, projectAddress, true);
 
-        return proofValue;
-    }
+    //     return proofValue;
+    // }
 
     /// @notice Authorize or deauthorize a KYC verifier
     /// @param verifier Address of the verifier
