@@ -17,7 +17,6 @@ export default function UserDashboard({ fheInstance, userAddress }: UserDashboar
   const [isDecrypting, setIsDecrypting] = useState(false)
   const [decryptedData, setDecryptedData] = useState<{
     passportNumber?: string
-    passportAddress?: string
     birthYear?: number
     countryCode?: string
   } | null>(null)
@@ -106,7 +105,6 @@ export default function UserDashboard({ fheInstance, userAddress }: UserDashboar
 
       setDecryptedData({
         passportNumber: passportNumber || 'Invalid',
-        passportAddress: passportAddress,
         birthYear: Number(result[kycData[1]]),
         countryCode: countryName || 'Unknown'
       })
@@ -243,18 +241,17 @@ export default function UserDashboard({ fheInstance, userAddress }: UserDashboar
                 ) : (
                   <div className="card-tech p-6 border-green-500/30 bg-gray-800/50">
                     <h4 className="font-semibold text-white mb-4">DECRYPTED PERSONAL DATA</h4>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <p className="text-xs text-gray-300">PASSPORT NUMBER:</p>
+                    <div className="flex flex-wrap gap-8 justify-center md:justify-start">
+                      <div className="text-center">
+                        <p className="text-xs text-gray-300 mb-2">PASSPORT NUMBER</p>
                         <p className="text-lg text-green-400 font-mono font-bold">{decryptedData.passportNumber}</p>
-                        <p className="text-xs text-gray-500 break-all">Address: {decryptedData.passportAddress}</p>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-xs text-gray-300">BIRTH YEAR:</p>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-300 mb-2">BIRTH YEAR</p>
                         <p className="text-lg text-green-400 font-mono font-bold">{decryptedData.birthYear}</p>
                       </div>
-                      <div className="space-y-1">
-                        <p className="text-xs text-gray-300">COUNTRY:</p>
+                      <div className="text-center">
+                        <p className="text-xs text-gray-300 mb-2">COUNTRY</p>
                         <p className="text-lg text-green-400 font-mono font-bold">{decryptedData.countryCode}</p>
                       </div>
                     </div>
