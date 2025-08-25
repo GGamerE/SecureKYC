@@ -30,31 +30,31 @@ function App() {
     <div className="bg-tech-dark min-h-screen">
       <header className="header-tech">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex justify-between items-center py-6">
-            <div className="flex items-center space-x-4 slide-in-up">
+          <div className="flex justify-between items-center py-4">
+            <div className="flex items-center space-x-3 slide-in-up">
               <div>
-                <h1 className="text-2xl font-bold text-white">SECURE<span className="text-cyan-400">KYC</span></h1>
-                <p className="text-gray-400 text-sm">BLOCKCHAIN IDENTITY VERIFICATION</p>
+                <h1 className="text-xl font-bold text-white">SECURE<span className="text-cyan-400">KYC</span></h1>
+                <p className="text-gray-400 text-xs">BLOCKCHAIN IDENTITY VERIFICATION</p>
               </div>
             </div>
             
             {/* FHE Status in Header */}
             {isConnected && (
-              <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-3">
                 {!fheInstance ? (
-                  <div className="flex items-center space-x-3">
+                  <div className="flex items-center space-x-2">
                     <div className="text-right">
-                      <p className="text-sm text-yellow-400 font-semibold">FHE REQUIRED</p>
+                      <p className="text-xs text-yellow-400 font-semibold">FHE REQUIRED</p>
                       <p className="text-xs text-gray-400">Initialize encryption</p>
                     </div>
                     <button
                       onClick={handleInitFHE}
                       disabled={isInitializingFHE}
-                      className="btn-tech text-sm px-3 py-1.5"
+                      className="btn-tech text-xs px-2 py-1"
                     >
                       {isInitializingFHE ? (
                         <div className="flex items-center">
-                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                          <div className="animate-spin rounded-full h-2 w-2 border-b-2 border-white mr-1"></div>
                           <span className="text-xs">INIT...</span>
                         </div>
                       ) : (
@@ -64,7 +64,7 @@ function App() {
                   </div>
                 ) : (
                   <div className="text-right">
-                    <p className="text-sm text-green-400 font-semibold">Zama ONLINE</p>
+                    <p className="text-xs text-green-400 font-semibold">Zama ONLINE</p>
                     <p className="text-xs text-gray-400">Encryption ready</p>
                   </div>
                 )}
@@ -79,10 +79,10 @@ function App() {
       </header>
 
       {isConnected && (
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
+        <main className="max-w-7xl mx-auto py-4 sm:px-6 lg:px-8">
+          <div className="px-4 py-4 sm:px-0">
             {/* Tab Navigation */}
-            <div className="nav-tech mb-8 slide-in-up glow-cyan">
+            <div className="nav-tech mb-6 slide-in-up glow-cyan">
               <button
                 onClick={() => setActiveTab('submit')}
                 className={`tab-tech ${activeTab === 'submit' ? 'active' : ''}`}
@@ -110,8 +110,8 @@ function App() {
                   {fheInstance ? (
                     <KYCSubmissionForm fheInstance={fheInstance} userAddress={address} />
                   ) : (
-                    <div className="card-tech p-8 text-center">
-                      <p className="text-gray-300 text-lg">INITIALIZE FHE TO ACCESS SECURE SUBMISSION</p>
+                    <div className="card-tech p-6 text-center">
+                      <p className="text-gray-300 text-sm">INITIALIZE FHE TO ACCESS SECURE SUBMISSION</p>
                     </div>
                   )}
                 </div>
@@ -123,8 +123,8 @@ function App() {
                 fheInstance ? (
                   <UserDashboard fheInstance={fheInstance} userAddress={address} />
                 ) : (
-                  <div className="card-tech p-8 text-center">
-                    <p className="text-gray-300 text-lg">INITIALIZE FHE TO ACCESS DASHBOARD</p>
+                  <div className="card-tech p-6 text-center">
+                    <p className="text-gray-300 text-sm">INITIALIZE FHE TO ACCESS DASHBOARD</p>
                   </div>
                 )
               )}
@@ -134,46 +134,46 @@ function App() {
       )}
 
       {!isConnected && (
-        <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
-          <div className="px-4 py-6 sm:px-0">
-            <div className="max-w-4xl mx-auto text-center">
+        <main className="max-w-7xl mx-auto py-4 sm:px-6 lg:px-8">
+          <div className="px-4 py-4 sm:px-0">
+            <div className="max-w-2xl mx-auto text-center">
               
               <div className="slide-in-up">
-                <h1 className="text-4xl font-bold text-white mb-2">
+                <h1 className="text-3xl font-bold text-white mb-2">
                   SECURE<span className="text-cyan-400">KYC</span>
                 </h1>
-                <h2 className="text-xl text-cyan-400 mb-6 font-medium">
+                <h2 className="text-lg text-cyan-400 mb-4 font-medium">
                   BLOCKCHAIN IDENTITY VERIFICATION SYSTEM
                 </h2>
-                <p className="text-lg text-gray-300 mb-12 max-w-2xl mx-auto">
+                <p className="text-sm text-gray-300 mb-8 max-w-xl mx-auto">
                   Advanced privacy-preserving KYC verification using Fully Homomorphic Encryption. 
                   Your identity data remains encrypted at all times while enabling secure verification.
                 </p>
               </div>
               
               <div className="feature-grid-tech slide-in-up">
-                <div className="card-tech p-6 text-center">
-                  <h3 className="font-semibold text-white mb-3 text-lg">QUANTUM-RESISTANT</h3>
-                  <p className="text-gray-300 text-sm">Military-grade FHE encryption protects your data against future quantum attacks</p>
+                <div className="card-tech p-4 text-center">
+                  <h3 className="font-semibold text-white mb-2 text-sm">QUANTUM-RESISTANT</h3>
+                  <p className="text-gray-300 text-xs">Military-grade FHE encryption protects your data against future quantum attacks</p>
                 </div>
                 
-                <div className="card-tech p-6 text-center">
-                  <h3 className="font-semibold text-white mb-3 text-lg">ZERO-KNOWLEDGE</h3>
-                  <p className="text-gray-300 text-sm">Verification without revealing sensitive personal information to third parties</p>
+                <div className="card-tech p-4 text-center">
+                  <h3 className="font-semibold text-white mb-2 text-sm">ZERO-KNOWLEDGE</h3>
+                  <p className="text-gray-300 text-xs">Verification without revealing sensitive personal information to third parties</p>
                 </div>
                 
-                <div className="card-tech p-6 text-center">
-                  <h3 className="font-semibold text-white mb-3 text-lg">SELF-SOVEREIGN</h3>
-                  <p className="text-gray-300 text-sm">Maintain complete control over your identity data with blockchain ownership</p>
+                <div className="card-tech p-4 text-center">
+                  <h3 className="font-semibold text-white mb-2 text-sm">SELF-SOVEREIGN</h3>
+                  <p className="text-gray-300 text-xs">Maintain complete control over your identity data with blockchain ownership</p>
                 </div>
               </div>
               
-              <div className="mt-12 slide-in-up">
-                <p className="text-gray-400 text-lg font-medium mb-4">
+              <div className="mt-8 slide-in-up">
+                <p className="text-gray-400 text-sm font-medium mb-3">
                   CONNECT WALLET TO ACCESS SECURE VERIFICATION
                 </p>
-                <div className="inline-block px-8 py-2 border border-cyan-400 rounded-lg">
-                  <span className="text-cyan-400 font-mono text-sm pulse-glow">/// WAITING FOR CONNECTION ///</span>
+                <div className="inline-block px-4 py-1.5 border border-cyan-400 rounded-md">
+                  <span className="text-cyan-400 font-mono text-xs pulse-glow">/// WAITING FOR CONNECTION ///</span>
                 </div>
               </div>
             </div>

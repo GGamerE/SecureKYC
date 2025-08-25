@@ -144,10 +144,10 @@ export default function UserDashboard({ fheInstance, userAddress }: UserDashboar
   return (
     <div className="space-y-8 slide-in-up">
       {/* Verification Status Card */}
-      <div className="card-tech p-8 glow-cyan">
-        <div className="flex items-center space-x-4 mb-8">
+      <div className="card-tech p-6 glow-cyan">
+        <div className="flex items-center space-x-3 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-2">YOUR IDENTITY VERIFICATION STATUS</h2>
+            <h2 className="text-lg font-bold text-white mb-2">YOUR IDENTITY VERIFICATION STATUS</h2>
             <p className="text-cyan-400 text-sm">ENCRYPTED KYC PROTOCOL STATUS</p>
           </div>
         </div>
@@ -186,7 +186,7 @@ export default function UserDashboard({ fheInstance, userAddress }: UserDashboar
             </div>
           </div>
         ) : (
-          <div className="text-center py-8">
+          <div className="text-center py-6">
             <p className="text-gray-400">NO KYC DATA FOUND. PLEASE SUBMIT YOUR IDENTITY INFORMATION FIRST.</p>
           </div>
         )}
@@ -196,7 +196,7 @@ export default function UserDashboard({ fheInstance, userAddress }: UserDashboar
             <div className="flex items-start space-x-3">
               <div className="w-full">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="font-semibold text-lg">ENCRYPTED DATA STATUS</h3>
+                  <h3 className="font-semibold text-sm">ENCRYPTED DATA STATUS</h3>
                   <button
                     onClick={handleDecryptData}
                     disabled={isDecrypting || !fheInstance || !walletClient}
@@ -241,18 +241,18 @@ export default function UserDashboard({ fheInstance, userAddress }: UserDashboar
                 ) : (
                   <div className="card-tech p-6 border-green-500/30 bg-gray-800/50">
                     <h4 className="font-semibold text-white mb-4">DECRYPTED PERSONAL DATA</h4>
-                    <div className="flex flex-wrap gap-8 justify-center md:justify-start">
+                    <div className="flex flex-wrap gap-4 justify-center md:justify-start">
                       <div className="text-center">
-                        <p className="text-xs text-gray-300 mb-2">PASSPORT NUMBER</p>
-                        <p className="text-lg text-green-400 font-mono font-bold">{decryptedData.passportNumber}</p>
+                        <p className="text-xs text-gray-300 mb-1">PASSPORT NUMBER</p>
+                        <p className="text-sm text-green-400 font-mono font-bold">{decryptedData.passportNumber}</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-xs text-gray-300 mb-2">BIRTH YEAR</p>
-                        <p className="text-lg text-green-400 font-mono font-bold">{decryptedData.birthYear}</p>
+                        <p className="text-xs text-gray-300 mb-1">BIRTH YEAR</p>
+                        <p className="text-sm text-green-400 font-mono font-bold">{decryptedData.birthYear}</p>
                       </div>
                       <div className="text-center">
-                        <p className="text-xs text-gray-300 mb-2">COUNTRY</p>
-                        <p className="text-lg text-green-400 font-mono font-bold">{decryptedData.countryCode}</p>
+                        <p className="text-xs text-gray-300 mb-1">COUNTRY</p>
+                        <p className="text-sm text-green-400 font-mono font-bold">{decryptedData.countryCode}</p>
                       </div>
                     </div>
                     <div className="mt-6 flex items-center justify-between">
@@ -274,10 +274,10 @@ export default function UserDashboard({ fheInstance, userAddress }: UserDashboar
 
       {/* Project Interaction Cards */}
       {verificationStatus && verificationStatus[0] && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Check Eligibility */}
-          <div className="card-tech p-6 border-cyan-500/30">
-            <h3 className="text-lg font-semibold text-white mb-6">CHECK PROJECT ELIGIBILITY</h3>
+          <div className="card-tech p-4 border-cyan-500/30">
+            <h3 className="text-sm font-semibold text-white mb-4">CHECK PROJECT ELIGIBILITY</h3>
             
             <form onSubmit={handleCheckEligibility} className="space-y-6">
               <div className="form-tech">

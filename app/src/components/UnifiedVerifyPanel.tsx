@@ -103,18 +103,18 @@ export default function UnifiedVerifyPanel({ userAddress }: UnifiedVerifyPanelPr
 
   if (!isAuthorizedVerifier) {
     return (
-      <div className="card-tech p-8 slide-in-up">
-        <div className="flex items-center space-x-4 mb-8">
+      <div className="card-tech p-6 slide-in-up">
+        <div className="flex items-center space-x-3 mb-6">
           <div>
-            <h2 className="text-2xl font-bold text-white mb-2">VERIFICATION CENTER</h2>
+            <h2 className="text-lg font-bold text-white mb-2">VERIFICATION CENTER</h2>
             <p className="text-cyan-400 text-sm">KYC & PROJECT MANAGEMENT PROTOCOL</p>
           </div>
         </div>
         
-        <div className="alert-tech alert-tech-warning mb-8">
+        <div className="alert-tech alert-tech-warning mb-6">
           <div className="flex items-start space-x-3">
             <div>
-              <h3 className="font-semibold mb-2 text-lg">ACCESS RESTRICTED</h3>
+              <h3 className="font-semibold mb-2 text-sm">ACCESS RESTRICTED</h3>
               <p className="text-sm opacity-90 leading-relaxed">
                 You are not authorized to access verification functions. Only authorized verifiers with proper cryptographic credentials can verify KYC data and manage projects.
                 Contact the system administrator to request verifier access.
@@ -188,18 +188,18 @@ export default function UnifiedVerifyPanel({ userAddress }: UnifiedVerifyPanelPr
   }
 
   return (
-    <div className="card-tech p-8 slide-in-up glow-cyan">
-      <div className="flex items-center space-x-4 mb-8">
+    <div className="card-tech p-6 slide-in-up glow-cyan">
+      <div className="flex items-center space-x-3 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white mb-2">VERIFICATION CENTER</h2>
+          <h2 className="text-lg font-bold text-white mb-2">VERIFICATION CENTER</h2>
           <p className="text-cyan-400 text-sm">AUTHORIZED VALIDATOR ACCESS</p>
         </div>
       </div>
       
-      <div className="alert-tech alert-tech-success mb-8">
+      <div className="alert-tech alert-tech-success mb-6">
         <div className="flex items-start space-x-3">
           <div>
-            <h3 className="font-semibold mb-2 text-lg">AUTHORIZED VERIFIER</h3>
+            <h3 className="font-semibold mb-2 text-sm">AUTHORIZED VERIFIER</h3>
             <p className="text-sm opacity-90 leading-relaxed">
               You are authorized to verify KYC submissions and manage projects. Use the tabs below to switch between KYC verification and project management functions.
             </p>
@@ -208,7 +208,7 @@ export default function UnifiedVerifyPanel({ userAddress }: UnifiedVerifyPanelPr
       </div>
 
       {/* Section Navigation */}
-      <div className="nav-tech mb-8 slide-in-up">
+      <div className="nav-tech mb-6 slide-in-up">
         <button
           onClick={() => setActiveSection('kyc')}
           className={`tab-tech ${activeSection === 'kyc' ? 'active' : ''}`}
@@ -323,10 +323,10 @@ export default function UnifiedVerifyPanel({ userAddress }: UnifiedVerifyPanelPr
 
       {/* Project Management Section */}
       {activeSection === 'project' && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Create Project Requirements */}
-          <div className="card-tech p-6 border-cyan-500/30">
-            <h3 className="text-lg font-semibold text-white mb-6">CREATE NEW PROJECT</h3>
+          <div className="card-tech p-4 border-cyan-500/30">
+            <h3 className="text-sm font-semibold text-white mb-4">CREATE NEW PROJECT</h3>
             
             <form onSubmit={handleCreateProject} className="space-y-6">
               <div className="form-tech">
@@ -377,8 +377,8 @@ export default function UnifiedVerifyPanel({ userAddress }: UnifiedVerifyPanelPr
           </div>
 
           {/* Lookup Project Requirements */}
-          <div className="card-tech p-6 border-gray-500/30">
-            <h3 className="text-lg font-semibold text-white mb-6">LOOKUP EXISTING PROJECT</h3>
+          <div className="card-tech p-4 border-gray-500/30">
+            <h3 className="text-sm font-semibold text-white mb-4">LOOKUP EXISTING PROJECT</h3>
             
             <div className="space-y-6">
               <div className="form-tech">

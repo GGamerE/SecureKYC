@@ -131,12 +131,12 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
 
   if (isConfirmed) {
     return (
-      <div className="card-tech p-8 slide-in-up">
+      <div className="card-tech p-6 slide-in-up">
         <div className="text-center">
-          <h3 className="text-2xl font-bold text-white mb-4">
+          <h3 className="text-lg font-bold text-white mb-3">
             KYC DATA TRANSMISSION SUCCESSFUL
           </h3>
-          <p className="text-gray-300 mb-6 leading-relaxed">
+          <p className="text-gray-300 mb-4 leading-relaxed text-sm">
             Your identity data has been encrypted using FHE and transmitted to the blockchain.
             The verification process will begin once an authorized validator reviews your submission.
           </p>
@@ -152,19 +152,19 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
   }
 
   return (
-    <div className="card-tech p-8 slide-in-up glow-cyan">
-      <div className="flex items-center space-x-4 mb-8">
+    <div className="card-tech p-6 slide-in-up glow-cyan">
+      <div className="flex items-center space-x-3 mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white mb-2">KYC DATA SUBMISSION</h2>
-          <p className="text-cyan-400 text-sm">SECURE IDENTITY VERIFICATION PROTOCOL</p>
+          <h2 className="text-lg font-bold text-white mb-2">KYC DATA SUBMISSION</h2>
+          <p className="text-cyan-400 text-xs">SECURE IDENTITY VERIFICATION PROTOCOL</p>
         </div>
       </div>
       
-      <div className="alert-tech alert-tech-info mb-8">
-        <div className="flex items-start space-x-3">
+      <div className="alert-tech alert-tech-info mb-6">
+        <div className="flex items-start space-x-2">
           <div>
-            <h3 className="font-semibold mb-2 text-lg">ENCRYPTION PROTOCOL ACTIVE</h3>
-            <p className="text-sm opacity-90 leading-relaxed">
+            <h3 className="font-semibold mb-2 text-sm">ENCRYPTION PROTOCOL ACTIVE</h3>
+            <p className="text-xs opacity-90 leading-relaxed">
               All data will be processed using Fully Homomorphic Encryption before blockchain storage.
               Only authorized validators with proper cryptographic credentials can access verification data.
             </p>
@@ -172,7 +172,7 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
         </div>
       </div>
 
-      <form onSubmit={handleSubmit} className="space-y-6">
+      <form onSubmit={handleSubmit} className="space-y-4">
         <div className="form-tech">
           <label htmlFor="passportNumber" className="form-label-tech">
             PASSPORT IDENTIFIER
@@ -187,7 +187,7 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
             placeholder="ENTER DOCUMENT IDENTIFIER"
           />
           {passportAddress && (
-            <div className="mt-3 p-3 bg-gray-800 rounded border border-cyan-500/30">
+            <div className="mt-2 p-2 bg-gray-800 rounded border border-cyan-500/30">
               <div className="text-xs text-cyan-400 mb-1">GENERATED ADDRESS:</div>
               <div className="text-xs text-gray-300 font-mono break-all">{passportAddress}</div>
               <div className="text-xs text-gray-500 mt-1">
@@ -233,7 +233,7 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
           </select>
         </div>
 
-        <div className="mt-8">
+        <div className="mt-6">
           <button
             type="submit"
             disabled={isSubmitting || isConfirming || !passportNumber || !birthYear}
