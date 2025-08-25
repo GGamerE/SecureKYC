@@ -28,22 +28,19 @@ contract SecureKYC is SepoliaConfig {
     }
 
     struct KYCRequirement {
-        uint32 minAge;
-        uint8[] allowedCountries;
-        bool requiresPassport;
         bool isActive;
     }
 
     mapping(address => EncryptedKYCData) private userKYCData;
     mapping(address => bool) public authorizedVerifiers;
-    mapping(address => KYCRequirement) public projectRequirements;
+    mapping(address => bool) public projectRequirements;
     mapping(address => mapping(address => bool)) public userProjectEligibility;
 
     address public admin;
 
     event KYCVerified(address indexed user, address indexed verifier, uint256 timestamp);
     event VerifierAuthorized(address indexed verifier, bool authorized);
-    event ProjectRequirementSet(address indexed projectAddress, uint32 minAge, bool requiresPassport);
+    event ProjectRequirementSet(address indexed projectAddress);
     event EligibilityChecked(address indexed user, address indexed projectAddress, bool eligible);
 
     error UnauthorizedVerifier();
@@ -119,56 +116,58 @@ contract SecureKYC is SepoliaConfig {
 
     /// @notice Set requirements for a project
     /// @param projectAddress Address that will be allowed to check eligibility
-    /// @param minAge Minimum age requirement
-    /// @param allowedCountries Array of allowed country codes
-    /// @param requiresPassport Whether passport verification is required
     function setProjectRequirements(
-        address projectAddress,
-        uint32 minAge,
-        uint8[] calldata allowedCountries,
-        bool requiresPassport
+        address projectAddress
     ) external onlyAuthorizedVerifier {
-        projectRequirements[projectAddress] = KYCRequirement({
-            minAge: minAge,
-            allowedCountries: allowedCountries,
-            requiresPassport: requiresPassport,
-            isActive: true
-        });
+        projectRequirements[projectAddress] = true;
 
-        emit ProjectRequirementSet(projectAddress, minAge, requiresPassport);
+        emit ProjectRequirementSet(projectAddress);
     }
 
     /// @notice Check if user meets project requirements without revealing specific data
     /// @param user Address of the user
+    /// @param minAge Minimum age requirement
+    /// @param allowedCountries Array of allowed country codes
+    /// @param requiresPassport Whether passport verification is required
     /// @return eligible Whether user is eligible (encrypted boolean)
-    function checkEligibility(address user) external returns (ebool eligible) {
+    function checkEligibility(
+        address user,
+        uint32 minAge,
+        uint8[] calldata allowedCountries,
+        bool requiresPassport
+    ) external returns (ebool eligible) {
         if (!userKYCData[user].isVerified) {
             revert UserNotVerified();
         }
 
-        KYCRequirement storage requirements = projectRequirements[msg.sender];
-        if (!requirements.isActive) {
+        if (!projectRequirements[msg.sender]) {
             revert InvalidInput();
         }
-        requirements.isActive = false;
+
+        // Use the stored encrypted KYC data directly
+        EncryptedKYCData storage userData = userKYCData[user];
+
+        // Check age requirement
         euint32 currentYear = FHE.asEuint32(uint32(block.timestamp / 365 days + 1970));
-        euint32 userAge = FHE.sub(currentYear, userKYCData[user].birthYear);
-        euint32 minAge = FHE.asEuint32(requirements.minAge);
+        euint32 userAge = FHE.sub(currentYear, userData.birthYear);
+        euint32 requiredMinAge = FHE.asEuint32(minAge);
+        ebool ageEligible = FHE.ge(userAge, requiredMinAge);
 
-        ebool ageEligible = FHE.ge(userAge, minAge);
-
+        // Check country requirement
         ebool countryEligible = FHE.asEbool(false);
-        for (uint256 i = 0; i < requirements.allowedCountries.length; i++) {
-            euint8 allowedCountry = FHE.asEuint8(requirements.allowedCountries[i]);
-            ebool countryMatch = FHE.eq(userKYCData[user].countryCode, allowedCountry);
-            countryEligible = FHE.or(countryEligible, countryMatch);
+        for (uint256 i = 0; i < allowedCountries.length; i++) {
+            euint8 allowedCountry = FHE.asEuint8(allowedCountries[i]);
+            ebool countryAllowed = FHE.eq(userData.countryCode, allowedCountry);
+            countryEligible = FHE.or(countryEligible, countryAllowed);
         }
 
+        // Check passport requirement
         ebool passportEligible = FHE.asEbool(true);
-        if (requirements.requiresPassport) {
-            passportEligible = FHE.ne(userKYCData[user].passportAddress, FHE.asEaddress(address(0)));
+        if (requiresPassport) {
+            passportEligible = FHE.ne(userData.passportAddress, FHE.asEaddress(address(0)));
         }
 
+        // Final eligibility check
         eligible = FHE.and(FHE.and(ageEligible, countryEligible), passportEligible);
 
         FHE.allowThis(eligible);
@@ -180,14 +179,48 @@ contract SecureKYC is SepoliaConfig {
 
     /// @notice Generate a proof of eligibility for a project
     /// @param projectAddress Address of the project
+    /// @param minAge Minimum age requirement
+    /// @param allowedCountries Array of allowed country codes
+    /// @param requiresPassport Whether passport verification is required
     /// @return proof Encrypted proof of eligibility
-    function generateProof(address projectAddress) external returns (euint256 proof) {
-        // Only the specified project address can check eligibility for users
-        if (!projectRequirements[projectAddress].isActive) {
+    function generateProof(
+        address projectAddress,
+        uint32 minAge,
+        uint8[] calldata allowedCountries,
+        bool requiresPassport
+    ) external returns (euint256 proof) {
+        if (!projectRequirements[projectAddress]) {
             revert InvalidInput();
         }
 
-        ebool eligible = this.checkEligibility(msg.sender);
+        if (!userKYCData[msg.sender].isVerified) {
+            revert UserNotVerified();
+        }
+
+        // Use the stored encrypted KYC data directly
+        EncryptedKYCData storage userData = userKYCData[msg.sender];
+
+        // Check age requirement
+        euint32 currentYear = FHE.asEuint32(uint32(block.timestamp / 365 days + 1970));
+        euint32 userAge = FHE.sub(currentYear, userData.birthYear);
+        euint32 requiredMinAge = FHE.asEuint32(minAge);
+        ebool ageEligible = FHE.ge(userAge, requiredMinAge);
+
+        // Check country requirement
+        ebool countryEligible = FHE.asEbool(false);
+        for (uint256 i = 0; i < allowedCountries.length; i++) {
+            euint8 allowedCountry = FHE.asEuint8(allowedCountries[i]);
+            ebool countryAllowed = FHE.eq(userData.countryCode, allowedCountry);
+            countryEligible = FHE.or(countryEligible, countryAllowed);
+        }
+
+        // Check passport requirement
+        ebool passportEligible = FHE.asEbool(true);
+        if (requiresPassport) {
+            passportEligible = FHE.ne(userData.passportAddress, FHE.asEaddress(address(0)));
+        }
+
+        ebool eligible = FHE.and(FHE.and(ageEligible, countryEligible), passportEligible);
 
         euint256 proofValue = FHE.select(
             eligible,
