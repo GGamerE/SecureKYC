@@ -67,11 +67,12 @@ task("submit-kyc", "Submit KYC data for verification")
 
 task("verify-kyc", "Verify a user's KYC data (authorized verifiers only)")
   .addOptionalParam("address", "Optionally specify the SecureKYC contract address")
-  .addParam("user", "The user's address to verify")
+  .addParam("userindex", "The user's address to verify")
   .setAction(async function (taskArguments: TaskArguments, { ethers, deployments }) {
-    const { user } = taskArguments;
+    const { userindex } = taskArguments;
 
-    const [signer] = await ethers.getSigners();
+    const signers = await ethers.getSigners();
+    const signer = signers[userindex]
     console.log("Verifying KYC with account:", signer.address);
 
     const secureKYCDeployment = taskArguments.address
@@ -81,10 +82,10 @@ task("verify-kyc", "Verify a user's KYC data (authorized verifiers only)")
 
     const contract = await ethers.getContractAt("SecureKYC", secureKYCDeployment.address);
 
-    const transaction = await contract.verifyKYC(user);
+    const transaction = await contract.verifyKYC(signer.address);
     await transaction.wait();
 
-    console.log(`KYC verified for user: ${user}`);
+    console.log(`KYC verified for user: ${signer.address}`);
     console.log("Transaction hash:", transaction.hash);
   });
 
@@ -130,12 +131,14 @@ task("set-project-requirements", "Set requirements for a project")
 
 task("check-eligibility", "Check eligibility for a project")
   .addOptionalParam("address", "Optionally specify the SecureKYC contract address")
-  .addParam("user", "User address to check")
+  .addParam("userindex", "User address to check")
   .addParam("projectid", "Project identifier")
   .setAction(async function (taskArguments: TaskArguments, { ethers, deployments }) {
-    const { user, projectid } = taskArguments;
+    const { userindex, projectid } = taskArguments;
 
-    const [signer] = await ethers.getSigners();
+    const signers = await ethers.getSigners();
+    const signer = signers[userindex]
+    const user = signer.address
     console.log("Checking eligibility with account:", signer.address);
 
     const secureKYCDeployment = taskArguments.address
@@ -218,10 +221,12 @@ task("authorize-verifier", "Authorize or deauthorize a KYC verifier")
 
 task("get-verification-status", "Get verification status of a user")
   .addOptionalParam("address", "Optionally specify the SecureKYC contract address")
-  .addParam("user", "User address")
+  .addParam("userindex", "User address")
   .setAction(async function (taskArguments: TaskArguments, { ethers, deployments }) {
-    const { user } = taskArguments;
+    const { userindex } = taskArguments;
 
+    const signers = await ethers.getSigners();
+    const user = signers[userindex].address
     const secureKYCDeployment = taskArguments.address
       ? { address: taskArguments.address }
       : await deployments.get("SecureKYC");
@@ -233,10 +238,10 @@ task("get-verification-status", "Get verification status of a user")
 
     console.log(`Verification status for ${user}:`);
     console.log("Verified:", verified);
-    if (verified) {
-      console.log("Verification timestamp:", new Date(Number(timestamp) * 1000).toISOString());
-      console.log("Verified by:", verifier);
-    }
+
+    console.log("Verification timestamp:", new Date(Number(timestamp) * 1000).toISOString());
+    console.log("Verified by:", verifier);
+
   });
 
 task("has-project-proof", "Check if user has proof for a project")
@@ -319,12 +324,13 @@ task("test-passport-conversion", "Test bidirectional passport <-> address conver
 
 task("get-user-kyc-data", "Get user's encrypted KYC data and decrypt it")
   .addOptionalParam("address", "Optionally specify the SecureKYC contract address")
-  .addParam("user", "User address to get KYC data for")
+  .addParam("userindex", "User address to get KYC data for")
   .setAction(async function (taskArguments: TaskArguments, { ethers, fhevm, deployments }) {
-    const { user } = taskArguments;
+    const { userindex } = taskArguments;
     await fhevm.initializeCLIApi();
 
-    const [signer] = await ethers.getSigners();
+    const signers = await ethers.getSigners();
+    const signer = signers[userindex]
     console.log("Getting KYC data with account:", signer.address);
 
     const secureKYCDeployment = taskArguments.address
@@ -335,10 +341,10 @@ task("get-user-kyc-data", "Get user's encrypted KYC data and decrypt it")
     const contract = await ethers.getContractAt("SecureKYC", secureKYCDeployment.address);
 
     try {
-      console.log(`Getting encrypted KYC data for user: ${user}`);
+      console.log(`Getting encrypted KYC data for user: ${signer.address}`);
 
       // Get encrypted KYC data from contract
-      const [encryptedPassportAddress, encryptedBirthYear, encryptedCountryCode] = await contract.getUserKYCData(user);
+      const [encryptedPassportAddress, encryptedBirthYear, encryptedCountryCode] = await contract.getUserKYCData(signer.address);
 
       console.log("Encrypted data retrieved:");
       console.log("- Passport address (encrypted):", encryptedPassportAddress);

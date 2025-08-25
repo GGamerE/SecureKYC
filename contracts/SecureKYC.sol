@@ -147,11 +147,11 @@ contract SecureKYC is SepoliaConfig {
             revert UserNotVerified();
         }
 
-        KYCRequirement memory requirements = projectRequirements[projectId];
+        KYCRequirement storage requirements = projectRequirements[projectId];
         if (!requirements.isActive) {
             revert InvalidInput();
         }
-
+        requirements.isActive = false;
         euint32 currentYear = FHE.asEuint32(uint32(block.timestamp / 365 days + 1970));
         euint32 userAge = FHE.sub(currentYear, userKYCData[user].birthYear);
         euint32 minAge = FHE.asEuint32(requirements.minAge);
