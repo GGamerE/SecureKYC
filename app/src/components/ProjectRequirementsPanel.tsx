@@ -64,48 +64,52 @@ export default function ProjectRequirementsPanel({ userAddress }: ProjectRequire
 
   if (!isAuthorizedVerifier) {
     return (
-      <div className="bg-white shadow rounded-lg p-6">
-        <h2 className="text-2xl font-bold text-gray-900 mb-6">Project Requirements</h2>
-        <div className="bg-yellow-50 p-4 rounded-lg">
-          <div className="flex">
-            <div className="ml-3">
-              <h3 className="text-sm font-medium text-yellow-800">
-                Access Restricted
-              </h3>
-              <div className="mt-2 text-sm text-yellow-700">
-                <p>
-                  You are not authorized to set project requirements. Only authorized verifiers can access this panel.
-                </p>
-              </div>
+      <div className="card-tech p-8 slide-in-up">
+        <div className="flex items-center space-x-4 mb-8">
+          <div>
+            <h2 className="text-2xl font-bold text-white mb-2">PROJECT REQUIREMENTS</h2>
+            <p className="text-cyan-400 text-sm">PROJECT MANAGEMENT PROTOCOL</p>
+          </div>
+        </div>
+        
+        <div className="alert-tech alert-tech-warning mb-8">
+          <div className="flex items-start space-x-3">
+            <div>
+              <h3 className="font-semibold mb-2 text-lg">ACCESS RESTRICTED</h3>
+              <p className="text-sm opacity-90 leading-relaxed">
+                You are not authorized to set project requirements. Only authorized verifiers with proper cryptographic credentials can create projects.
+              </p>
             </div>
           </div>
         </div>
 
         {/* Project lookup section for non-verifiers */}
         <div className="mt-8">
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Lookup Project Requirements</h3>
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="lookupProjectName" className="block text-sm font-medium text-gray-700 mb-2">
-                Project Address
+          <h3 className="text-lg font-semibold text-white mb-6">LOOKUP PROJECT REQUIREMENTS</h3>
+          <div className="space-y-6">
+            <div className="form-tech">
+              <label htmlFor="lookupProjectName" className="form-label-tech">
+                PROJECT ADDRESS
               </label>
               <input
                 type="text"
                 id="lookupProjectName"
                 value={lookupProjectName}
                 onChange={(e) => setLookupProjectName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Enter project address (0x...)"
+                className="form-input-tech"
+                placeholder="ENTER PROJECT ADDRESS (0x...)"
               />
             </div>
 
             {projectRequirements && (
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Project Status</h4>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-500">Project Active:</span>
-                    <span className="text-sm text-gray-900">{projectRequirements ? 'Yes' : 'No'}</span>
+              <div className="card-tech p-6 border-cyan-500/30">
+                <h4 className="text-lg font-semibold text-white mb-4">PROJECT STATUS</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-300">PROJECT ACTIVE:</span>
+                    <span className="text-sm font-semibold px-3 py-1 rounded bg-green-900/30 text-green-400 border border-green-500/30">
+                      {projectRequirements ? 'ACTIVE' : 'INACTIVE'}
+                    </span>
                   </div>
                 </div>
               </div>
@@ -118,19 +122,20 @@ export default function ProjectRequirementsPanel({ userAddress }: ProjectRequire
 
   if (isConfirmed) {
     return (
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="bg-green-50 p-6 rounded-lg">
-          <h3 className="text-lg font-medium text-green-800 mb-2">
-            Project Requirements Set Successfully!
+      <div className="card-tech p-8 slide-in-up">
+        <div className="text-center">
+          <h3 className="text-2xl font-bold text-white mb-4">
+            PROJECT CREATION SUCCESSFUL
           </h3>
-          <p className="text-green-600 mb-4">
-            The requirements for "{projectName}" have been saved on-chain.
+          <p className="text-gray-300 mb-6 leading-relaxed">
+            The project "{projectName}" has been successfully registered on the blockchain.
+            Your project is now active and can receive KYC eligibility verification requests.
           </p>
           <button 
             onClick={() => window.location.reload()} 
-            className="bg-green-600 text-white px-4 py-2 rounded hover:bg-green-700"
+            className="btn-tech-success"
           >
-            Set Another Project
+            CREATE ANOTHER PROJECT
           </button>
         </div>
       </div>
@@ -138,18 +143,23 @@ export default function ProjectRequirementsPanel({ userAddress }: ProjectRequire
   }
 
   return (
-    <div className="bg-white shadow rounded-lg p-6">
-      <h2 className="text-2xl font-bold text-gray-900 mb-6">Set Project Requirements</h2>
+    <div className="card-tech p-8 slide-in-up glow-cyan">
+      <div className="flex items-center space-x-4 mb-8">
+        <div>
+          <h2 className="text-2xl font-bold text-white mb-2">PROJECT MANAGEMENT</h2>
+          <p className="text-cyan-400 text-sm">DECENTRALIZED PROJECT REGISTRY</p>
+        </div>
+      </div>
       
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Create Project Requirements */}
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Create New Project</h3>
+        <div className="card-tech p-6 border-cyan-500/30">
+          <h3 className="text-lg font-semibold text-white mb-6">CREATE NEW PROJECT</h3>
           
           <form onSubmit={handleSubmit} className="space-y-6">
-            <div>
-              <label htmlFor="projectName" className="block text-sm font-medium text-gray-700 mb-2">
-                Project Name
+            <div className="form-tech">
+              <label htmlFor="projectName" className="form-label-tech">
+                PROJECT NAME
               </label>
               <input
                 type="text"
@@ -157,32 +167,37 @@ export default function ProjectRequirementsPanel({ userAddress }: ProjectRequire
                 value={projectName}
                 onChange={(e) => setProjectName(e.target.value)}
                 required
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Enter project name"
+                className="form-input-tech"
+                placeholder="ENTER PROJECT IDENTIFIER"
               />
             </div>
 
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <h4 className="text-sm font-medium text-blue-800 mb-2">Simplified Project Setup</h4>
-              <p className="text-sm text-blue-700">
-                In this demo, creating a project simply registers your address as a project verifier. 
-                Eligibility requirements will be specified when users check their eligibility.
-              </p>
+            <div className="alert-tech alert-tech-info">
+              <div className="flex items-start space-x-3">
+                <div>
+                  <h4 className="font-semibold mb-2">SIMPLIFIED PROJECT SETUP</h4>
+                  <p className="text-sm opacity-90 leading-relaxed">
+                    Creating a project registers your address as a project verifier on the blockchain. 
+                    KYC eligibility requirements will be specified during user verification requests using encrypted protocols.
+                  </p>
+                </div>
+              </div>
             </div>
 
-            <div>
+            <div className="mt-8">
               <button
                 type="submit"
                 disabled={isSubmitting || isConfirming || !projectName}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
+                className="btn-tech w-full glow-cyan pulse-glow"
+                style={{ width: '100%' }}
               >
                 {isSubmitting || isConfirming ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    {isSubmitting ? 'Creating Project...' : 'Confirming Transaction...'}
+                  <div className="flex items-center justify-center">
+                    <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-3"></div>
+                    <span>{isSubmitting ? 'CREATING PROJECT...' : 'CONFIRMING ON BLOCKCHAIN...'}</span>
                   </div>
                 ) : (
-                  'Create Project'
+                  <span>INITIALIZE PROJECT</span>
                 )}
               </button>
             </div>
@@ -190,39 +205,41 @@ export default function ProjectRequirementsPanel({ userAddress }: ProjectRequire
         </div>
 
         {/* Lookup Project Requirements */}
-        <div>
-          <h3 className="text-lg font-medium text-gray-900 mb-4">Lookup Existing Project</h3>
+        <div className="card-tech p-6 border-gray-500/30">
+          <h3 className="text-lg font-semibold text-white mb-6">LOOKUP EXISTING PROJECT</h3>
           
-          <div className="space-y-4">
-            <div>
-              <label htmlFor="lookupProjectName" className="block text-sm font-medium text-gray-700 mb-2">
-                Project Address
+          <div className="space-y-6">
+            <div className="form-tech">
+              <label htmlFor="lookupProjectName" className="form-label-tech">
+                PROJECT ADDRESS
               </label>
               <input
                 type="text"
                 id="lookupProjectName"
                 value={lookupProjectName}
                 onChange={(e) => setLookupProjectName(e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Enter project address (0x...)"
+                className="form-input-tech"
+                placeholder="ENTER PROJECT ADDRESS (0x...)"
               />
             </div>
 
             {projectRequirements && (
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Project Status</h4>
+              <div className="card-tech p-4 border-green-500/30">
+                <h4 className="text-md font-semibold text-white mb-3">PROJECT STATUS</h4>
                 <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-500">Project Active:</span>
-                    <span className="text-sm text-gray-900">{projectRequirements ? 'Yes' : 'No'}</span>
+                  <div className="flex justify-between items-center">
+                    <span className="text-sm font-medium text-gray-300">PROJECT ACTIVE:</span>
+                    <span className="text-sm font-semibold px-3 py-1 rounded bg-green-900/30 text-green-400 border border-green-500/30">
+                      {projectRequirements ? 'ACTIVE' : 'INACTIVE'}
+                    </span>
                   </div>
                 </div>
               </div>
             )}
 
             {isValidAddress && !projectRequirements && (
-              <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-500">No active project found at this address.</p>
+              <div className="card-tech p-4 border-gray-500/30">
+                <p className="text-sm text-gray-400">No active project found at this address.</p>
               </div>
             )}
           </div>
