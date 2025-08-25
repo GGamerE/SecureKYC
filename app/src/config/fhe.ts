@@ -12,6 +12,10 @@ export const initFHE = async () => {
   }
 };
 
+export const converZamaHex = (data: Uint8Array): `0x${string}` => {
+  return `0x${Array.from(data).map(b => b.toString(16).padStart(2, '0')).join('')}`;
+}
+
 export const COUNTRY_CODES = {
   'US': 1,
   'UK': 2,

@@ -2,7 +2,7 @@ import { useState } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { SecureKYCABI } from '../contracts/SecureKYC'
 import { CONTRACT_ADDRESS } from '../config/wagmi'
-import { COUNTRY_CODES, type CountryCode } from '../config/fhe'
+import { converZamaHex, COUNTRY_CODES, type CountryCode } from '../config/fhe'
 import { passportToAddress } from '../utils/passportUtils'
 import type { FhevmInstance } from '@zama-fhe/relayer-sdk/bundle'
 
@@ -109,10 +109,10 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
         abi: SecureKYCABI,
         functionName: 'submitKYC',
         args: [
-          encryptedInput.handles[0] as unknown as `0x${string}`, // passportAddress
-          encryptedInput.handles[1] as unknown as `0x${string}`, // birthYear
-          encryptedInput.handles[2] as unknown as `0x${string}`, // countryCode
-          encryptedInput.inputProof as unknown as `0x${string}`
+        converZamaHex(encryptedInput.handles[0]), // passportAddress
+          converZamaHex(encryptedInput.handles[1]), // birthYear
+         converZamaHex(encryptedInput.handles[2]), // countryCode
+          converZamaHex(encryptedInput.inputProof )
         ]
       })
       console.log('writeContract result:', result)
