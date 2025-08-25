@@ -122,8 +122,9 @@ task("check-eligibility", "Check eligibility for a project (must be called by pr
   .addParam("minage", "Minimum age requirement")
   .addParam("countries", "Allowed country codes (comma-separated, e.g., 1,2,3)")
   .addParam("passport", "Require passport (true/false)")
-  .setAction(async function (taskArguments: TaskArguments, { ethers, deployments }) {
+  .setAction(async function (taskArguments: TaskArguments, { ethers, fhevm, deployments }) {
     const { userindex, projectindex, minage, countries, passport } = taskArguments;
+    await fhevm.initializeCLIApi();
 
     const signers = await ethers.getSigners();
     const userSigner = signers[userindex];
@@ -150,7 +151,7 @@ task("check-eligibility", "Check eligibility for a project (must be called by pr
         allowedCountries,
         requiresPassport
       );
-      await transaction.wait();
+      const receipt = await transaction.wait();
 
       console.log(`Eligibility checked for user: ${user}`);
       console.log(`By project address: ${projectSigner.address}`);
@@ -159,54 +160,51 @@ task("check-eligibility", "Check eligibility for a project (must be called by pr
       console.log("- Allowed countries:", allowedCountries);
       console.log("- Requires passport:", requiresPassport);
       console.log("Transaction hash:", transaction.hash);
-      console.log("Note: Result is encrypted. Use frontend to decrypt the result.");
+      
+      // Try to get the return value and decrypt it
+      try {
+        console.log("\nAttempting to decrypt eligibility result...");
+        
+        // Get the eligibility result from the transaction
+        const eligibilityResult = await contractWithProjectSigner.checkEligibility.staticCall(
+          user,
+          parseInt(minage),
+          allowedCountries,
+          requiresPassport
+        );
+
+        // Import FhevmType for proper type specification
+        const { FhevmType } = require("@fhevm/hardhat-plugin");
+        
+        // Try to decrypt with project signer (who called the function)
+        const decryptedEligibility = await fhevm.userDecryptEbool(
+          eligibilityResult,
+          secureKYCDeployment.address,
+          projectSigner
+        );
+        
+        console.log("✅ Decrypted eligibility result:", decryptedEligibility ? "ELIGIBLE" : "NOT ELIGIBLE");
+        
+      } catch (decryptError) {
+        console.log("❌ Could not decrypt result - may need to wait or use frontend");
+        console.log("Decrypt error:", decryptError.message);
+      }
+      
     } catch (error) {
       console.error("Error checking eligibility:", error);
     }
   });
 
-task("generate-proof", "Generate proof of eligibility for a project")
-  .addOptionalParam("address", "Optionally specify the SecureKYC contract address")
-  .addParam("projectaddress", "Project address")
-  .addParam("minage", "Minimum age requirement")
-  .addParam("countries", "Allowed country codes (comma-separated, e.g., 1,2,3)")
-  .addParam("passport", "Require passport (true/false)")
-  .setAction(async function (taskArguments: TaskArguments, { ethers, deployments }) {
-    const { projectaddress, minage, countries, passport } = taskArguments;
-
-    const [signer] = await ethers.getSigners();
-    console.log("Generating proof with account:", signer.address);
-
-    const secureKYCDeployment = taskArguments.address
-      ? { address: taskArguments.address }
-      : await deployments.get("SecureKYC");
-    console.log(`SecureKYC: ${secureKYCDeployment.address}`);
-
-    const contract = await ethers.getContractAt("SecureKYC", secureKYCDeployment.address);
-
-    const allowedCountries = countries.split(",").map((c: string) => parseInt(c.trim()));
-    const requiresPassport = passport.toLowerCase() === "true";
-
-    try {
-      const transaction = await contract.generateProof(
-        projectaddress,
-        parseInt(minage),
-        allowedCountries,
-        requiresPassport
-      );
-      await transaction.wait();
-
-      console.log(`Proof generated for project address: ${projectaddress}`);
-      console.log("Requirements used:");
-      console.log("- Minimum age:", minage);
-      console.log("- Allowed countries:", allowedCountries);
-      console.log("- Requires passport:", requiresPassport);
-      console.log("Transaction hash:", transaction.hash);
-      console.log("Note: Proof is encrypted. Use frontend to access the encrypted proof.");
-    } catch (error) {
-      console.error("Error generating proof:", error);
-    }
-  });
+// Note: generateProof function is currently commented out in the contract
+// task("generate-proof", "Generate proof of eligibility for a project")
+//   .addOptionalParam("address", "Optionally specify the SecureKYC contract address")
+//   .addParam("projectaddress", "Project address")
+//   .addParam("minage", "Minimum age requirement")
+//   .addParam("countries", "Allowed country codes (comma-separated, e.g., 1,2,3)")
+//   .addParam("passport", "Require passport (true/false)")
+//   .setAction(async function (taskArguments: TaskArguments, { ethers, deployments }) {
+//     console.log("generateProof function is currently disabled in the contract");
+//   });
 
 task("authorize-verifier", "Authorize or deauthorize a KYC verifier")
   .addOptionalParam("address", "Optionally specify the SecureKYC contract address")
