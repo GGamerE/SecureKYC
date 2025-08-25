@@ -9,4 +9,4 @@ export const config = getDefaultConfig({
   ssr: false, // If your dApp uses server side rendering (SSR)
 });
 
-export const CONTRACT_ADDRESS = '0x0000000000000000000000000000000000000000' as `0x${string}` // TODO: Add deployed contract address
+export const CONTRACT_ADDRESS = '0xd959894dd540e0edb03de92801b25ba1a46ccddf' as `0x${string}` // TODO: Add deployed contract address

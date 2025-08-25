@@ -20,34 +20,91 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
   // Generate passport address for display
   const passportAddress = passportNumber ? passportToAddress(passportNumber) : null
 
+  // Debug logs for component state
+  console.log('KYCSubmissionForm render state:', {
+    passportNumber,
+    birthYear,
+    country,
+    isSubmitting,
+    userAddress,
+    fheInstance: !!fheInstance,
+    passportAddress
+  })
+
   const { writeContract, data: hash } = useWriteContract()
   const { isLoading: isConfirming, isSuccess: isConfirmed } = 
     useWaitForTransactionReceipt({ hash })
 
+  // Debug wagmi hooks
+  console.log('Wagmi hooks state:', {
+    writeContract: !!writeContract,
+    hash,
+    isConfirming,
+    isConfirmed
+  })
+
   const handleSubmit = async (e: React.FormEvent) => {
+    console.log('=== KYC SUBMISSION STARTED ===')
+    console.log('Form submitted, preventing default...')
     e.preventDefault()
     
-    if (!userAddress || !fheInstance) return
+    console.log('Checking prerequisites...')
+    console.log('userAddress:', userAddress)
+    console.log('fheInstance:', fheInstance)
+    console.log('passportNumber:', passportNumber)
+    console.log('birthYear:', birthYear)
+    console.log('country:', country)
+    
+    if (!userAddress || !fheInstance) {
+      console.error('Missing prerequisites:', { userAddress: !!userAddress, fheInstance: !!fheInstance })
+      return
+    }
 
     try {
+      console.log('Setting submitting state to true...')
       setIsSubmitting(true)
 
+      console.log('Creating encrypted input buffer...')
       // Create encrypted input buffer
       const input = fheInstance.createEncryptedInput(CONTRACT_ADDRESS, userAddress)
+      console.log('Input buffer created:', input)
       
       // Convert passport number to EVM address
+      console.log('Converting passport to address...')
       const passportAddress = passportToAddress(passportNumber)
+      console.log('Generated passport address:', passportAddress)
       
       // Add encrypted data
+      console.log('Adding data to input buffer...')
+      console.log('Adding address:', passportAddress)
       input.addAddress(passportAddress)
+      
+      console.log('Adding birthYear as uint32:', BigInt(birthYear))
       input.add32(BigInt(birthYear))
+      
+      console.log('Adding country code:', COUNTRY_CODES[country])
       input.add8(BigInt(COUNTRY_CODES[country]))
 
+      console.log('Encrypting input data...')
       // Encrypt the input
       const encryptedInput = await input.encrypt()
+      console.log('Encryption completed:', {
+        handles: encryptedInput.handles,
+        inputProof: encryptedInput.inputProof
+      })
+
+      console.log('Preparing contract call...')
+      console.log('Contract address:', CONTRACT_ADDRESS)
+      console.log('Function args:', [
+        encryptedInput.handles[0],
+        encryptedInput.handles[1], 
+        encryptedInput.handles[2],
+        encryptedInput.inputProof
+      ])
 
       // Submit to contract
-      writeContract({
+      console.log('Calling writeContract...')
+      const result = writeContract({
         address: CONTRACT_ADDRESS,
         abi: SecureKYCABI,
         functionName: 'submitKYC',
@@ -58,10 +115,17 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
           encryptedInput.inputProof as unknown as `0x${string}`
         ]
       })
+      console.log('writeContract result:', result)
     } catch (error) {
-      console.error('Error submitting KYC:', error)
+      console.error('=== ERROR IN KYC SUBMISSION ===')
+      console.error('Error type:', typeof error)
+      console.error('Error message:', error instanceof Error ? error.message : 'Unknown error')
+      console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace')
+      console.error('Full error object:', error)
     } finally {
+      console.log('Setting submitting state to false...')
       setIsSubmitting(false)
+      console.log('=== KYC SUBMISSION ENDED ===')
     }
   }
 
@@ -175,6 +239,16 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
             disabled={isSubmitting || isConfirming || !passportNumber || !birthYear}
             className="btn-tech w-full glow-cyan pulse-glow"
             style={{ width: '100%' }}
+            onClick={(e) => {
+              console.log('Button clicked!')
+              console.log('Button disabled?', isSubmitting || isConfirming || !passportNumber || !birthYear)
+              console.log('Disabled reasons:', {
+                isSubmitting,
+                isConfirming,
+                noPassportNumber: !passportNumber,
+                noBirthYear: !birthYear
+              })
+            }}
           >
             {isSubmitting || isConfirming ? (
               <div className="flex items-center justify-center">
