@@ -158,7 +158,7 @@ contract SecureKYC is SepoliaConfig {
         ebool ageEligible = FHE.ge(userAge, minAge);
 
         ebool countryEligible = FHE.asEbool(false);
-        for (uint i = 0; i < requirements.allowedCountries.length; i++) {
+        for (uint256 i = 0; i < requirements.allowedCountries.length; i++) {
             euint8 allowedCountry = FHE.asEuint8(requirements.allowedCountries[i]);
             ebool countryMatch = FHE.eq(userKYCData[user].countryCode, allowedCountry);
             countryEligible = FHE.or(countryEligible, countryMatch);

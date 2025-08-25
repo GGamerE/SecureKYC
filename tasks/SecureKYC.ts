@@ -91,14 +91,16 @@ task("verify-kyc", "Verify a user's KYC data (authorized verifiers only)")
 
 task("set-project-requirements", "Set requirements for a project")
   .addOptionalParam("address", "Optionally specify the SecureKYC contract address")
-  .addParam("projectid", "Project identifier (string)")
+  .addParam("projectindex", "Project address that will be allowed to check eligibility")
   .addParam("minage", "Minimum age requirement")
   .addParam("countries", "Allowed country codes (comma-separated, e.g., 1,2,3)")
   .addParam("passport", "Require passport (true/false)")
   .setAction(async function (taskArguments: TaskArguments, { ethers, deployments }) {
-    const { projectid, minage, countries, passport } = taskArguments;
+    const { projectindex, minage, countries, passport } = taskArguments;
 
-    const [signer] = await ethers.getSigners();
+    const signers = await ethers.getSigners();
+    const signer = signers[0]
+    const projectaddress = signers[projectindex].address
     console.log("Setting project requirements with account:", signer.address);
 
     const secureKYCDeployment = taskArguments.address
@@ -108,12 +110,11 @@ task("set-project-requirements", "Set requirements for a project")
 
     const contract = await ethers.getContractAt("SecureKYC", secureKYCDeployment.address);
 
-    const projectIdBytes32 = ethers.id(projectid);
     const allowedCountries = countries.split(",").map((c: string) => parseInt(c.trim()));
     const requiresPassport = passport.toLowerCase() === "true";
 
     const transaction = await contract.setProjectRequirements(
-      projectIdBytes32,
+      projectaddress,
       parseInt(minage),
       allowedCountries,
       requiresPassport
@@ -121,25 +122,26 @@ task("set-project-requirements", "Set requirements for a project")
 
     await transaction.wait();
 
-    console.log(`Project requirements set for: ${projectid}`);
-    console.log("Project ID (bytes32):", projectIdBytes32);
+    console.log(`Project requirements set for address: ${projectaddress}`);
     console.log("Minimum age:", minage);
     console.log("Allowed countries:", allowedCountries);
     console.log("Requires passport:", requiresPassport);
     console.log("Transaction hash:", transaction.hash);
   });
 
-task("check-eligibility", "Check eligibility for a project")
+task("check-eligibility", "Check eligibility for a project (must be called by project address)")
   .addOptionalParam("address", "Optionally specify the SecureKYC contract address")
   .addParam("userindex", "User address to check")
-  .addParam("projectid", "Project identifier")
+  .addParam("projectindex", "Index of the project address in signers array")
   .setAction(async function (taskArguments: TaskArguments, { ethers, deployments }) {
-    const { userindex, projectid } = taskArguments;
+    const { userindex, projectindex } = taskArguments;
 
     const signers = await ethers.getSigners();
-    const signer = signers[userindex]
-    const user = signer.address
-    console.log("Checking eligibility with account:", signer.address);
+    const userSigner = signers[userindex];
+    const projectSigner = signers[projectindex];
+    const user = userSigner.address;
+    console.log("Checking eligibility for user:", user);
+    console.log("Using project account:", projectSigner.address);
 
     const secureKYCDeployment = taskArguments.address
       ? { address: taskArguments.address }
@@ -147,15 +149,14 @@ task("check-eligibility", "Check eligibility for a project")
     console.log(`SecureKYC: ${secureKYCDeployment.address}`);
 
     const contract = await ethers.getContractAt("SecureKYC", secureKYCDeployment.address);
-
-    const projectIdBytes32 = ethers.id(projectid);
+    const contractWithProjectSigner = contract.connect(projectSigner);
 
     try {
-      const transaction = await contract.checkEligibility(user, projectIdBytes32);
+      const transaction = await contractWithProjectSigner.checkEligibility(user);
       await transaction.wait();
 
       console.log(`Eligibility checked for user: ${user}`);
-      console.log(`Project: ${projectid}`);
+      console.log(`By project address: ${projectSigner.address}`);
       console.log("Transaction hash:", transaction.hash);
       console.log("Note: Result is encrypted. Use frontend to decrypt the result.");
     } catch (error) {
@@ -165,9 +166,9 @@ task("check-eligibility", "Check eligibility for a project")
 
 task("generate-proof", "Generate proof of eligibility for a project")
   .addOptionalParam("address", "Optionally specify the SecureKYC contract address")
-  .addParam("projectid", "Project identifier")
+  .addParam("projectaddress", "Project address")
   .setAction(async function (taskArguments: TaskArguments, { ethers, deployments }) {
-    const { projectid } = taskArguments;
+    const { projectaddress } = taskArguments;
 
     const [signer] = await ethers.getSigners();
     console.log("Generating proof with account:", signer.address);
@@ -179,13 +180,11 @@ task("generate-proof", "Generate proof of eligibility for a project")
 
     const contract = await ethers.getContractAt("SecureKYC", secureKYCDeployment.address);
 
-    const projectIdBytes32 = ethers.id(projectid);
-
     try {
-      const transaction = await contract.generateProof(projectIdBytes32);
+      const transaction = await contract.generateProof(projectaddress);
       await transaction.wait();
 
-      console.log(`Proof generated for project: ${projectid}`);
+      console.log(`Proof generated for project address: ${projectaddress}`);
       console.log("Transaction hash:", transaction.hash);
       console.log("Note: Proof is encrypted. Use frontend to access the encrypted proof.");
     } catch (error) {
@@ -247,9 +246,9 @@ task("get-verification-status", "Get verification status of a user")
 task("has-project-proof", "Check if user has proof for a project")
   .addOptionalParam("address", "Optionally specify the SecureKYC contract address")
   .addParam("user", "User address")
-  .addParam("projectid", "Project identifier")
+  .addParam("projectaddress", "Project address")
   .setAction(async function (taskArguments: TaskArguments, { ethers, deployments }) {
-    const { user, projectid } = taskArguments;
+    const { user, projectaddress } = taskArguments;
 
     const secureKYCDeployment = taskArguments.address
       ? { address: taskArguments.address }
@@ -258,10 +257,9 @@ task("has-project-proof", "Check if user has proof for a project")
 
     const contract = await ethers.getContractAt("SecureKYC", secureKYCDeployment.address);
 
-    const projectIdBytes32 = ethers.id(projectid);
-    const hasProof = await contract.hasProjectProof(user, projectIdBytes32);
+    const hasProof = await contract.hasProjectProof(user, projectaddress);
 
-    console.log(`User ${user} has proof for project "${projectid}": ${hasProof}`);
+    console.log(`User ${user} has proof for project address "${projectaddress}": ${hasProof}`);
   });
 
 // Utility functions for passport <-> address conversion
