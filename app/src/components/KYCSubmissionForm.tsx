@@ -3,6 +3,7 @@ import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { SecureKYCABI } from '../contracts/SecureKYC'
 import { CONTRACT_ADDRESS } from '../config/wagmi'
 import { COUNTRY_CODES, type CountryCode } from '../config/fhe'
+import { passportToAddress } from '../utils/passportUtils'
 import type { FhevmInstance } from '@zama-fhe/relayer-sdk/bundle'
 
 interface KYCSubmissionFormProps {
@@ -15,6 +16,9 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
   const [birthYear, setBirthYear] = useState('')
   const [country, setCountry] = useState<CountryCode>('US')
   const [isSubmitting, setIsSubmitting] = useState(false)
+  
+  // Generate passport address for display
+  const passportAddress = passportNumber ? passportToAddress(passportNumber) : null
 
   const { writeContract, data: hash } = useWriteContract()
   const { isLoading: isConfirming, isSuccess: isConfirmed } = 
@@ -31,9 +35,11 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
       // Create encrypted input buffer
       const input = fheInstance.createEncryptedInput(CONTRACT_ADDRESS, userAddress)
       
-      // Hash the passport number and add encrypted data
-      const passportHash = BigInt('0x' + Buffer.from(passportNumber).toString('hex').padStart(64, '0'))
-      input.add256(passportHash)
+      // Convert passport number to EVM address
+      const passportAddress = passportToAddress(passportNumber)
+      
+      // Add encrypted data
+      input.addAddress(passportAddress)
       input.add32(BigInt(birthYear))
       input.add8(BigInt(COUNTRY_CODES[country]))
 
@@ -46,7 +52,7 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
         abi: SecureKYCABI,
         functionName: 'submitKYC',
         args: [
-          encryptedInput.handles[0] as unknown as `0x${string}`, // passportHash
+          encryptedInput.handles[0] as unknown as `0x${string}`, // passportAddress
           encryptedInput.handles[1] as unknown as `0x${string}`, // birthYear
           encryptedInput.handles[2] as unknown as `0x${string}`, // countryCode
           encryptedInput.inputProof as unknown as `0x${string}`
@@ -116,6 +122,15 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
             className="form-input-tech"
             placeholder="ENTER DOCUMENT IDENTIFIER"
           />
+          {passportAddress && (
+            <div className="mt-3 p-3 bg-gray-800 rounded border border-cyan-500/30">
+              <div className="text-xs text-cyan-400 mb-1">GENERATED ADDRESS:</div>
+              <div className="text-xs text-gray-300 font-mono break-all">{passportAddress}</div>
+              <div className="text-xs text-gray-500 mt-1">
+                Your passport number will be converted to this address and encrypted before storage
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="form-tech">

@@ -5,6 +5,7 @@ import KYCSubmissionForm from './components/KYCSubmissionForm'
 import KYCVerificationPanel from './components/KYCVerificationPanel'
 import ProjectRequirementsPanel from './components/ProjectRequirementsPanel'
 import UserDashboard from './components/UserDashboard'
+import PassportConversionDemo from './components/PassportConversionDemo'
 import { initFHE } from './config/fhe'
 import type { FhevmInstance } from '@zama-fhe/relayer-sdk/bundle'
 import './App.css'
@@ -120,13 +121,16 @@ function App() {
             {/* Tab Content */}
             <div className="slide-in-up">
               {activeTab === 'submit' && (
-                fheInstance ? (
-                  <KYCSubmissionForm fheInstance={fheInstance} userAddress={address} />
-                ) : (
-                  <div className="card-tech p-8 text-center">
-                    <p className="text-gray-300 text-lg">INITIALIZE FHE TO ACCESS SECURE SUBMISSION</p>
-                  </div>
-                )
+                <div className="space-y-6">
+                  <PassportConversionDemo />
+                  {fheInstance ? (
+                    <KYCSubmissionForm fheInstance={fheInstance} userAddress={address} />
+                  ) : (
+                    <div className="card-tech p-8 text-center">
+                      <p className="text-gray-300 text-lg">INITIALIZE FHE TO ACCESS SECURE SUBMISSION</p>
+                    </div>
+                  )}
+                </div>
               )}
               {activeTab === 'verify' && (
                 <KYCVerificationPanel userAddress={address} />

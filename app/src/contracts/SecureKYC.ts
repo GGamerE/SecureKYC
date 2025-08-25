@@ -204,7 +204,7 @@ export const SecureKYCABI = [
     "name": "getUserKYCData",
     "outputs": [
       {
-        "internalType": "euint256",
+        "internalType": "eaddress",
         "name": "",
         "type": "bytes32"
       },
@@ -353,8 +353,8 @@ export const SecureKYCABI = [
   {
     "inputs": [
       {
-        "internalType": "externalEuint256",
-        "name": "passportHash",
+        "internalType": "externalEaddress",
+        "name": "passportAddress",
         "type": "bytes32"
       },
       {

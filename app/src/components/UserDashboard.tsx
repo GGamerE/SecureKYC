@@ -140,7 +140,7 @@ export default function UserDashboard({ userAddress }: UserDashboardProps) {
             </p>
             <div className="mt-2 space-y-1">
               <p className="text-xs text-blue-600">
-                Passport Hash: {kycData[0] !== '0x0000000000000000000000000000000000000000000000000000000000000000' ? 'Encrypted ✓' : 'Not set'}
+                Passport Address: {kycData[0] !== '0x0000000000000000000000000000000000000000000000000000000000000000' ? 'Encrypted ✓' : 'Not set'}
               </p>
               <p className="text-xs text-blue-600">
                 Birth Year: {kycData[1] !== '0x0000000000000000000000000000000000000000000000000000000000000000' ? 'Encrypted ✓' : 'Not set'}
