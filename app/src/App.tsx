@@ -2,8 +2,7 @@ import { useState } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 import KYCSubmissionForm from './components/KYCSubmissionForm'
-import KYCVerificationPanel from './components/KYCVerificationPanel'
-import ProjectRequirementsPanel from './components/ProjectRequirementsPanel'
+import UnifiedVerifyPanel from './components/UnifiedVerifyPanel'
 import UserDashboard from './components/UserDashboard'
 import { initFHE } from './config/fhe'
 import type { FhevmInstance } from '@zama-fhe/relayer-sdk/bundle'
@@ -12,7 +11,7 @@ import './App.css'
 function App() {
   const { address, isConnected } = useAccount()
   const [fheInstance, setFheInstance] = useState<FhevmInstance | null>(null)
-  const [activeTab, setActiveTab] = useState<'submit' | 'verify' | 'projects' | 'dashboard'>('submit')
+  const [activeTab, setActiveTab] = useState<'submit' | 'verify' | 'dashboard'>('submit')
   const [isInitializingFHE, setIsInitializingFHE] = useState(false)
 
   const handleInitFHE = async () => {
@@ -97,12 +96,6 @@ function App() {
                 <span>VERIFY</span>
               </button>
               <button
-                onClick={() => setActiveTab('projects')}
-                className={`tab-tech ${activeTab === 'projects' ? 'active' : ''}`}
-              >
-                <span>PROJECTS</span>
-              </button>
-              <button
                 onClick={() => setActiveTab('dashboard')}
                 className={`tab-tech ${activeTab === 'dashboard' ? 'active' : ''}`}
               >
@@ -124,10 +117,7 @@ function App() {
                 </div>
               )}
               {activeTab === 'verify' && (
-                <KYCVerificationPanel userAddress={address} />
-              )}
-              {activeTab === 'projects' && (
-                <ProjectRequirementsPanel userAddress={address} />
+                <UnifiedVerifyPanel userAddress={address} />
               )}
               {activeTab === 'dashboard' && (
                 fheInstance ? (
