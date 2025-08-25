@@ -63,11 +63,6 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
     return (
       <div className="card-tech p-8 slide-in-up">
         <div className="text-center">
-          <div className="icon-tech-success mx-auto mb-6 glow-green">
-            <svg fill="currentColor" viewBox="0 0 20 20">
-              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
-            </svg>
-          </div>
           <h3 className="text-2xl font-bold text-white mb-4">
             KYC DATA TRANSMISSION SUCCESSFUL
           </h3>
@@ -89,11 +84,6 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
   return (
     <div className="card-tech p-8 slide-in-up glow-cyan">
       <div className="flex items-center space-x-4 mb-8">
-        <div className="icon-tech" style={{ width: '2.5rem', height: '2.5rem' }}>
-          <svg fill="currentColor" viewBox="0 0 20 20" style={{ width: '1.25rem', height: '1.25rem' }}>
-            <path fillRule="evenodd" d="M4 2a1 1 0 011 1v2.101a7.002 7.002 0 0111.601 2.566 1 1 0 11-1.885.666A5.002 5.002 0 005.999 7H9a1 1 0 010 2H4a1 1 0 01-1-1V3a1 1 0 011-1z" clipRule="evenodd" />
-          </svg>
-        </div>
         <div>
           <h2 className="text-2xl font-bold text-white mb-2">KYC DATA SUBMISSION</h2>
           <p className="text-cyan-400 text-sm">SECURE IDENTITY VERIFICATION PROTOCOL</p>
@@ -102,11 +92,6 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
       
       <div className="alert-tech alert-tech-info mb-8">
         <div className="flex items-start space-x-3">
-          <div className="icon-tech" style={{ width: '1.5rem', height: '1.5rem', marginTop: '0.25rem' }}>
-            <svg fill="currentColor" viewBox="0 0 20 20" style={{ width: '0.75rem', height: '0.75rem' }}>
-              <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
-            </svg>
-          </div>
           <div>
             <h3 className="font-semibold mb-2 text-lg">ENCRYPTION PROTOCOL ACTIVE</h3>
             <p className="text-sm opacity-90 leading-relaxed">
@@ -173,7 +158,7 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
           <button
             type="submit"
             disabled={isSubmitting || isConfirming || !passportNumber || !birthYear}
-            className="btn-tech w-full py-4 px-6 text-lg font-semibold glow-cyan pulse-glow"
+            className="btn-tech w-full glow-cyan pulse-glow"
             style={{ width: '100%' }}
           >
             {isSubmitting || isConfirming ? (
@@ -182,12 +167,7 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
                 <span>{isSubmitting ? 'ENCRYPTING & TRANSMITTING...' : 'CONFIRMING ON BLOCKCHAIN...'}</span>
               </div>
             ) : (
-              <div className="flex items-center justify-center space-x-2">
-                <svg className="w-5 h-5" fill="currentColor" viewBox="0 0 20 20">
-                  <path fillRule="evenodd" d="M5 9V7a5 5 0 0110 0v2a2 2 0 012 2v5a2 2 0 01-2 2H5a2 2 0 01-2-2v-5a2 2 0 012-2zm8-2v2H7V7a3 3 0 016 0z" clipRule="evenodd" />
-                </svg>
-                <span>INITIATE SECURE TRANSMISSION</span>
-              </div>
+              <span>INITIATE SECURE TRANSMISSION</span>
             )}
           </button>
         </div>

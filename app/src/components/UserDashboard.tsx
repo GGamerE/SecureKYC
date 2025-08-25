@@ -253,11 +253,6 @@ export default function UserDashboard({ userAddress }: UserDashboardProps) {
       {isConfirmed && (
         <div className="bg-green-50 p-4 rounded-lg">
           <div className="flex">
-            <div className="flex-shrink-0">
-              <svg className="h-5 w-5 text-green-400" viewBox="0 0 20 20" fill="currentColor">
-                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
-              </svg>
-            </div>
             <div className="ml-3">
               <h3 className="text-sm font-medium text-green-800">
                 Operation Completed Successfully
@@ -275,9 +270,6 @@ export default function UserDashboard({ userAddress }: UserDashboardProps) {
       {!verificationStatus?.[0] && verificationStatus !== undefined && (
         <div className="bg-white shadow rounded-lg p-6">
           <div className="text-center py-8">
-            <svg className="mx-auto h-12 w-12 text-yellow-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-2.5L13.732 4c-.77-.833-1.732-.833-2.5 0L3.732 16.5c-.77.833.192 2.5 1.732 2.5z" />
-            </svg>
             <h3 className="mt-4 text-lg font-medium text-gray-900">Verification Pending</h3>
             <p className="mt-2 text-gray-500">
               Your KYC information has been submitted but is still pending verification by an authorized verifier.

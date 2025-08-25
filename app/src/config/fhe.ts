@@ -1,13 +1,11 @@
 import { createInstance, SepoliaConfig } from "@zama-fhe/relayer-sdk/bundle";
+import { initSDK } from '@zama-fhe/relayer-sdk/bundle';
 
 export const initFHE = async () => {
   try {
-    if (typeof window !== 'undefined' && window.ethereum) {
-      const config = { ...SepoliaConfig, network: window.ethereum };
-      return await createInstance(config);
-    } else {
-      throw new Error('No Ethereum provider found');
-    }
+    await initSDK()
+    const config = { ...SepoliaConfig, network: window.ethereum };
+    return await createInstance(config);
   } catch (error) {
     console.error('Failed to initialize FHE instance:', error);
     throw error;
@@ -16,7 +14,7 @@ export const initFHE = async () => {
 
 export const COUNTRY_CODES = {
   'US': 1,
-  'UK': 2, 
+  'UK': 2,
   'CA': 3,
   'AU': 4,
   'FR': 5,
