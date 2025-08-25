@@ -35,9 +35,9 @@ export const SecureKYCABI = [
       },
       {
         "indexed": true,
-        "internalType": "bytes32",
-        "name": "projectId",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "projectAddress",
+        "type": "address"
       },
       {
         "indexed": false,
@@ -79,21 +79,9 @@ export const SecureKYCABI = [
     "inputs": [
       {
         "indexed": true,
-        "internalType": "bytes32",
-        "name": "projectId",
-        "type": "bytes32"
-      },
-      {
-        "indexed": false,
-        "internalType": "uint32",
-        "name": "minAge",
-        "type": "uint32"
-      },
-      {
-        "indexed": false,
-        "internalType": "bool",
-        "name": "requiresPassport",
-        "type": "bool"
+        "internalType": "address",
+        "name": "projectAddress",
+        "type": "address"
       }
     ],
     "name": "ProjectRequirementSet",
@@ -158,9 +146,19 @@ export const SecureKYCABI = [
         "type": "address"
       },
       {
-        "internalType": "bytes32",
-        "name": "projectId",
-        "type": "bytes32"
+        "internalType": "uint32",
+        "name": "minAge",
+        "type": "uint32"
+      },
+      {
+        "internalType": "uint8[]",
+        "name": "allowedCountries",
+        "type": "uint8[]"
+      },
+      {
+        "internalType": "bool",
+        "name": "requiresPassport",
+        "type": "bool"
       }
     ],
     "name": "checkEligibility",
@@ -168,25 +166,6 @@ export const SecureKYCABI = [
       {
         "internalType": "ebool",
         "name": "eligible",
-        "type": "bytes32"
-      }
-    ],
-    "stateMutability": "nonpayable",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "internalType": "bytes32",
-        "name": "projectId",
-        "type": "bytes32"
-      }
-    ],
-    "name": "generateProof",
-    "outputs": [
-      {
-        "internalType": "euint256",
-        "name": "proof",
         "type": "bytes32"
       }
     ],
@@ -259,9 +238,9 @@ export const SecureKYCABI = [
         "type": "address"
       },
       {
-        "internalType": "bytes32",
-        "name": "projectId",
-        "type": "bytes32"
+        "internalType": "address",
+        "name": "projectAddress",
+        "type": "address"
       }
     ],
     "name": "hasProjectProof",
@@ -278,26 +257,16 @@ export const SecureKYCABI = [
   {
     "inputs": [
       {
-        "internalType": "bytes32",
+        "internalType": "address",
         "name": "",
-        "type": "bytes32"
+        "type": "address"
       }
     ],
     "name": "projectRequirements",
     "outputs": [
       {
-        "internalType": "uint32",
-        "name": "minAge",
-        "type": "uint32"
-      },
-      {
         "internalType": "bool",
-        "name": "requiresPassport",
-        "type": "bool"
-      },
-      {
-        "internalType": "bool",
-        "name": "isActive",
+        "name": "",
         "type": "bool"
       }
     ],
@@ -325,24 +294,9 @@ export const SecureKYCABI = [
   {
     "inputs": [
       {
-        "internalType": "bytes32",
-        "name": "projectId",
-        "type": "bytes32"
-      },
-      {
-        "internalType": "uint32",
-        "name": "minAge",
-        "type": "uint32"
-      },
-      {
-        "internalType": "uint8[]",
-        "name": "allowedCountries",
-        "type": "uint8[]"
-      },
-      {
-        "internalType": "bool",
-        "name": "requiresPassport",
-        "type": "bool"
+        "internalType": "address",
+        "name": "projectAddress",
+        "type": "address"
       }
     ],
     "name": "setProjectRequirements",
@@ -386,9 +340,9 @@ export const SecureKYCABI = [
         "type": "address"
       },
       {
-        "internalType": "bytes32",
+        "internalType": "address",
         "name": "",
-        "type": "bytes32"
+        "type": "address"
       }
     ],
     "name": "userProjectEligibility",

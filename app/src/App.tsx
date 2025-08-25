@@ -1,11 +1,10 @@
-import { useState, useEffect } from 'react'
+import { useState } from 'react'
 import { ConnectButton } from '@rainbow-me/rainbowkit'
 import { useAccount } from 'wagmi'
 import KYCSubmissionForm from './components/KYCSubmissionForm'
 import KYCVerificationPanel from './components/KYCVerificationPanel'
 import ProjectRequirementsPanel from './components/ProjectRequirementsPanel'
 import UserDashboard from './components/UserDashboard'
-import PassportConversionDemo from './components/PassportConversionDemo'
 import { initFHE } from './config/fhe'
 import type { FhevmInstance } from '@zama-fhe/relayer-sdk/bundle'
 import './App.css'
@@ -39,6 +38,40 @@ function App() {
                 <p className="text-gray-400 text-sm">BLOCKCHAIN IDENTITY VERIFICATION</p>
               </div>
             </div>
+            
+            {/* FHE Status in Header */}
+            {isConnected && (
+              <div className="flex items-center space-x-4">
+                {!fheInstance ? (
+                  <div className="flex items-center space-x-3">
+                    <div className="text-right">
+                      <p className="text-sm text-yellow-400 font-semibold">FHE REQUIRED</p>
+                      <p className="text-xs text-gray-400">Initialize encryption</p>
+                    </div>
+                    <button
+                      onClick={handleInitFHE}
+                      disabled={isInitializingFHE}
+                      className="btn-tech text-sm px-3 py-1.5"
+                    >
+                      {isInitializingFHE ? (
+                        <div className="flex items-center">
+                          <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-1"></div>
+                          <span className="text-xs">INIT...</span>
+                        </div>
+                      ) : (
+                        <span className="text-xs">INIT FHE</span>
+                      )}
+                    </button>
+                  </div>
+                ) : (
+                  <div className="text-right">
+                    <p className="text-sm text-green-400 font-semibold">Zama ONLINE</p>
+                    <p className="text-xs text-gray-400">Encryption ready</p>
+                  </div>
+                )}
+              </div>
+            )}
+            
             <div className="slide-in-up">
               <ConnectButton />
             </div>
@@ -49,47 +82,6 @@ function App() {
       {isConnected && (
         <main className="max-w-7xl mx-auto py-6 sm:px-6 lg:px-8">
           <div className="px-4 py-6 sm:px-0">
-            {/* FHE Initialization Section */}
-            {!fheInstance && (
-              <div className="alert-tech alert-tech-warning mb-6 slide-in-up">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center space-x-3">
-                    <div>
-                      <h3 className="font-semibold text-lg">FHE INITIALIZATION REQUIRED</h3>
-                      <p className="text-sm mt-1 opacity-90">
-                        Initialize Fully Homomorphic Encryption to access encrypted features
-                      </p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleInitFHE}
-                    disabled={isInitializingFHE}
-                    className="btn-tech pulse-glow"
-                  >
-                    {isInitializingFHE ? (
-                      <div className="flex items-center">
-                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                        INITIALIZING...
-                      </div>
-                    ) : (
-                      'INITIALIZE FHE'
-                    )}
-                  </button>
-                </div>
-              </div>
-            )}
-
-            {fheInstance && (
-              <div className="alert-tech alert-tech-success mb-6 slide-in-up">
-                <div className="flex items-center space-x-4">
-                  <div>
-                    <p className="font-semibold text-lg">FHE SYSTEM ONLINE</p>
-                    <p className="text-sm mt-1 opacity-90">All encrypted features are now active and secure</p>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Tab Navigation */}
             <div className="nav-tech mb-8 slide-in-up glow-cyan">
               <button
@@ -122,7 +114,6 @@ function App() {
             <div className="slide-in-up">
               {activeTab === 'submit' && (
                 <div className="space-y-6">
-                  <PassportConversionDemo />
                   {fheInstance ? (
                     <KYCSubmissionForm fheInstance={fheInstance} userAddress={address} />
                   ) : (

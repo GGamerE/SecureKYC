@@ -111,3 +111,24 @@ export function demonstrateConversion(passportNumber: string) {
     }
   }
 }
+
+/**
+ * Generate passport addresses with different salts for demo purposes
+ * @param passportNumber - The passport number string
+ * @returns Object with different salted addresses
+ */
+export function generatePassportAddresses(passportNumber: string) {
+  const baseAddress = passportToAddress(passportNumber)
+  
+  // Generate addresses with different salts using keccak256
+  const withUserSalt = `0x${keccak256(toBytes(`${passportNumber}:user`)).slice(2, 42)}` as `0x${string}`
+  const withSystemSalt = `0x${keccak256(toBytes(`${passportNumber}:system`)).slice(2, 42)}` as `0x${string}`
+  const withTimestamp = `0x${keccak256(toBytes(`${passportNumber}:${Date.now()}`)).slice(2, 42)}` as `0x${string}`
+  
+  return {
+    basic: baseAddress,
+    withUserSalt,
+    withSystemSalt,
+    withTimestamp
+  }
+}

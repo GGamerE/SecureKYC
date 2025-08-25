@@ -2,8 +2,6 @@ import { useState } from 'react'
 import { useWriteContract, useWaitForTransactionReceipt, useReadContract } from 'wagmi'
 import { SecureKYCABI } from '../contracts/SecureKYC'
 import { CONTRACT_ADDRESS } from '../config/wagmi'
-import { COUNTRY_CODES, type CountryCode } from '../config/fhe'
-import { keccak256, toBytes } from 'viem'
 
 interface ProjectRequirementsPanelProps {
   userAddress: `0x${string}` | undefined
@@ -11,11 +9,7 @@ interface ProjectRequirementsPanelProps {
 
 export default function ProjectRequirementsPanel({ userAddress }: ProjectRequirementsPanelProps) {
   const [projectName, setProjectName] = useState('')
-  const [minAge, setMinAge] = useState('')
-  const [selectedCountries, setSelectedCountries] = useState<CountryCode[]>([])
-  const [requiresPassport, setRequiresPassport] = useState(true)
   const [isSubmitting, setIsSubmitting] = useState(false)
-
   const [lookupProjectName, setLookupProjectName] = useState('')
 
   // Check if current user is an authorized verifier
@@ -27,14 +21,15 @@ export default function ProjectRequirementsPanel({ userAddress }: ProjectRequire
     query: { enabled: !!userAddress }
   })
 
-  // Get project requirements for lookup
-  const projectId = lookupProjectName ? keccak256(toBytes(lookupProjectName)) : undefined
+  // Get project requirements for lookup (using project address instead of name)
+  // For demo purposes, we'll use the lookup name as an address format if it's valid
+  const isValidAddress = lookupProjectName?.startsWith('0x') && lookupProjectName.length === 42
   const { data: projectRequirements } = useReadContract({
     address: CONTRACT_ADDRESS,
     abi: SecureKYCABI,
     functionName: 'projectRequirements',
-    args: projectId ? [projectId] : undefined,
-    query: { enabled: !!projectId }
+    args: isValidAddress ? [lookupProjectName as `0x${string}`] : undefined,
+    query: { enabled: !!isValidAddress }
   })
 
   const { writeContract, data: hash } = useWriteContract()
@@ -44,24 +39,20 @@ export default function ProjectRequirementsPanel({ userAddress }: ProjectRequire
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     
-    if (!userAddress || !projectName || !minAge) return
+    if (!userAddress || !projectName) return
 
     try {
       setIsSubmitting(true)
       
-      const projectIdBytes = keccak256(toBytes(projectName))
-      const countryCodesArray = selectedCountries.map(country => COUNTRY_CODES[country])
+      // Use the user's address as the project address for this simplified example
+      // In a real application, you would use a dedicated project address
+      const projectAddress = userAddress
       
       writeContract({
         address: CONTRACT_ADDRESS,
         abi: SecureKYCABI,
         functionName: 'setProjectRequirements',
-        args: [
-          projectIdBytes,
-          parseInt(minAge),
-          countryCodesArray,
-          requiresPassport
-        ]
+        args: [projectAddress]
       })
     } catch (error) {
       console.error('Error setting project requirements:', error)
@@ -70,13 +61,6 @@ export default function ProjectRequirementsPanel({ userAddress }: ProjectRequire
     }
   }
 
-  const handleCountryToggle = (country: CountryCode) => {
-    setSelectedCountries(prev => 
-      prev.includes(country) 
-        ? prev.filter(c => c !== country)
-        : [...prev, country]
-    )
-  }
 
   if (!isAuthorizedVerifier) {
     return (
@@ -103,7 +87,7 @@ export default function ProjectRequirementsPanel({ userAddress }: ProjectRequire
           <div className="space-y-4">
             <div>
               <label htmlFor="lookupProjectName" className="block text-sm font-medium text-gray-700 mb-2">
-                Project Name
+                Project Address
               </label>
               <input
                 type="text"
@@ -111,21 +95,17 @@ export default function ProjectRequirementsPanel({ userAddress }: ProjectRequire
                 value={lookupProjectName}
                 onChange={(e) => setLookupProjectName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Enter project name to view requirements"
+                placeholder="Enter project address (0x...)"
               />
             </div>
 
-            {projectRequirements && projectRequirements[2] && ( // isActive
+            {projectRequirements && (
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Project Requirements</h4>
+                <h4 className="text-md font-medium text-gray-900 mb-3">Project Status</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-500">Minimum Age:</span>
-                    <span className="text-sm text-gray-900">{Number(projectRequirements[0])} years</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-500">Requires Passport:</span>
-                    <span className="text-sm text-gray-900">{projectRequirements[1] ? 'Yes' : 'No'}</span>
+                    <span className="text-sm font-medium text-gray-500">Project Active:</span>
+                    <span className="text-sm text-gray-900">{projectRequirements ? 'Yes' : 'No'}</span>
                   </div>
                 </div>
               </div>
@@ -182,70 +162,27 @@ export default function ProjectRequirementsPanel({ userAddress }: ProjectRequire
               />
             </div>
 
-            <div>
-              <label htmlFor="minAge" className="block text-sm font-medium text-gray-700 mb-2">
-                Minimum Age Requirement
-              </label>
-              <input
-                type="number"
-                id="minAge"
-                value={minAge}
-                onChange={(e) => setMinAge(e.target.value)}
-                required
-                min="1"
-                max="100"
-                className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Enter minimum age"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">
-                Allowed Countries
-              </label>
-              <div className="grid grid-cols-3 gap-2 max-h-32 overflow-y-auto border border-gray-300 rounded-md p-3">
-                {Object.keys(COUNTRY_CODES).map((country) => (
-                  <label key={country} className="flex items-center">
-                    <input
-                      type="checkbox"
-                      checked={selectedCountries.includes(country as CountryCode)}
-                      onChange={() => handleCountryToggle(country as CountryCode)}
-                      className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                    />
-                    <span className="ml-2 text-xs text-gray-900">{country}</span>
-                  </label>
-                ))}
-              </div>
-              <p className="mt-1 text-sm text-gray-500">
-                Select all countries that are allowed to participate
+            <div className="bg-blue-50 p-4 rounded-lg">
+              <h4 className="text-sm font-medium text-blue-800 mb-2">Simplified Project Setup</h4>
+              <p className="text-sm text-blue-700">
+                In this demo, creating a project simply registers your address as a project verifier. 
+                Eligibility requirements will be specified when users check their eligibility.
               </p>
-            </div>
-
-            <div>
-              <label className="flex items-center">
-                <input
-                  type="checkbox"
-                  checked={requiresPassport}
-                  onChange={(e) => setRequiresPassport(e.target.checked)}
-                  className="rounded border-gray-300 text-indigo-600 shadow-sm focus:border-indigo-300 focus:ring focus:ring-indigo-200 focus:ring-opacity-50"
-                />
-                <span className="ml-2 text-sm text-gray-900">Requires Passport Verification</span>
-              </label>
             </div>
 
             <div>
               <button
                 type="submit"
-                disabled={isSubmitting || isConfirming || !projectName || !minAge || selectedCountries.length === 0}
+                disabled={isSubmitting || isConfirming || !projectName}
                 className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isSubmitting || isConfirming ? (
                   <div className="flex items-center">
                     <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    {isSubmitting ? 'Setting Requirements...' : 'Confirming Transaction...'}
+                    {isSubmitting ? 'Creating Project...' : 'Confirming Transaction...'}
                   </div>
                 ) : (
-                  'Set Project Requirements'
+                  'Create Project'
                 )}
               </button>
             </div>
@@ -259,7 +196,7 @@ export default function ProjectRequirementsPanel({ userAddress }: ProjectRequire
           <div className="space-y-4">
             <div>
               <label htmlFor="lookupProjectName" className="block text-sm font-medium text-gray-700 mb-2">
-                Project Name
+                Project Address
               </label>
               <input
                 type="text"
@@ -267,29 +204,25 @@ export default function ProjectRequirementsPanel({ userAddress }: ProjectRequire
                 value={lookupProjectName}
                 onChange={(e) => setLookupProjectName(e.target.value)}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                placeholder="Enter project name to view requirements"
+                placeholder="Enter project address (0x...)"
               />
             </div>
 
-            {projectRequirements && projectRequirements[2] && ( // isActive
+            {projectRequirements && (
               <div className="bg-gray-50 p-4 rounded-lg">
-                <h4 className="text-md font-medium text-gray-900 mb-3">Project Requirements</h4>
+                <h4 className="text-md font-medium text-gray-900 mb-3">Project Status</h4>
                 <div className="space-y-2">
                   <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-500">Minimum Age:</span>
-                    <span className="text-sm text-gray-900">{Number(projectRequirements[0])} years</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-sm font-medium text-gray-500">Requires Passport:</span>
-                    <span className="text-sm text-gray-900">{projectRequirements[1] ? 'Yes' : 'No'}</span>
+                    <span className="text-sm font-medium text-gray-500">Project Active:</span>
+                    <span className="text-sm text-gray-900">{projectRequirements ? 'Yes' : 'No'}</span>
                   </div>
                 </div>
               </div>
             )}
 
-            {lookupProjectName && projectRequirements && !projectRequirements[2] && (
+            {isValidAddress && !projectRequirements && (
               <div className="bg-gray-50 p-4 rounded-lg">
-                <p className="text-sm text-gray-500">No active project found with this name.</p>
+                <p className="text-sm text-gray-500">No active project found at this address.</p>
               </div>
             )}
           </div>

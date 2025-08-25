@@ -3,7 +3,6 @@ import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 
 import { SecureKYCABI } from '../contracts/SecureKYC'
 import { CONTRACT_ADDRESS } from '../config/wagmi'
 import type { FhevmInstance } from '@zama-fhe/relayer-sdk/bundle'
-import { keccak256, toBytes } from 'viem'
 
 interface UserDashboardProps {
   fheInstance: FhevmInstance
@@ -12,8 +11,6 @@ interface UserDashboardProps {
 
 export default function UserDashboard({ userAddress }: UserDashboardProps) {
   const [eligibilityProjectName, setEligibilityProjectName] = useState('')
-  const [proofProjectName, setProofProjectName] = useState('')
-  const [isGeneratingProof, setIsGeneratingProof] = useState(false)
 
   // Get user's verification status
   const { data: verificationStatus } = useReadContract({
@@ -33,42 +30,11 @@ export default function UserDashboard({ userAddress }: UserDashboardProps) {
     query: { enabled: !!userAddress }
   })
 
-  // Check project proof status
-  const proofProjectId = proofProjectName ? keccak256(toBytes(proofProjectName)) : undefined
-  const { data: hasProjectProof } = useReadContract({
-    address: CONTRACT_ADDRESS,
-    abi: SecureKYCABI,
-    functionName: 'hasProjectProof',
-    args: userAddress && proofProjectId ? [userAddress, proofProjectId] : undefined,
-    query: { enabled: !!(userAddress && proofProjectId) }
-  })
 
   const { writeContract, data: hash } = useWriteContract()
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = 
+  const { isSuccess: isConfirmed } = 
     useWaitForTransactionReceipt({ hash })
 
-  const handleGenerateProof = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!userAddress || !proofProjectName) return
-
-    try {
-      setIsGeneratingProof(true)
-      
-      const projectIdBytes = keccak256(toBytes(proofProjectName))
-      
-      writeContract({
-        address: CONTRACT_ADDRESS,
-        abi: SecureKYCABI,
-        functionName: 'generateProof',
-        args: [projectIdBytes]
-      })
-    } catch (error) {
-      console.error('Error generating proof:', error)
-    } finally {
-      setIsGeneratingProof(false)
-    }
-  }
 
   const handleCheckEligibility = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -76,13 +42,17 @@ export default function UserDashboard({ userAddress }: UserDashboardProps) {
     if (!userAddress || !eligibilityProjectName) return
 
     try {
-      const projectIdBytes = keccak256(toBytes(eligibilityProjectName))
+      // For demo purposes, using example eligibility parameters
+      // In a real app, these would come from the project's requirements
+      const minAge = 18
+      const allowedCountries = [1, 2, 3] // Example country codes
+      const requiresPassport = true
       
       writeContract({
         address: CONTRACT_ADDRESS,
         abi: SecureKYCABI,
         functionName: 'checkEligibility',
-        args: [userAddress, projectIdBytes]
+        args: [userAddress, minAge, allowedCountries, requiresPassport]
       })
     } catch (error) {
       console.error('Error checking eligibility:', error)
@@ -163,7 +133,7 @@ export default function UserDashboard({ userAddress }: UserDashboardProps) {
             <form onSubmit={handleCheckEligibility} className="space-y-4">
               <div>
                 <label htmlFor="eligibilityProjectName" className="block text-sm font-medium text-gray-700 mb-2">
-                  Project Name
+                  Project Name (Demo)
                 </label>
                 <input
                   type="text"
@@ -172,7 +142,7 @@ export default function UserDashboard({ userAddress }: UserDashboardProps) {
                   onChange={(e) => setEligibilityProjectName(e.target.value)}
                   required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter project name"
+                  placeholder="Enter any project name for demo"
                 />
               </div>
               
@@ -192,58 +162,17 @@ export default function UserDashboard({ userAddress }: UserDashboardProps) {
             </div>
           </div>
 
-          {/* Generate Proof */}
-          <div className="bg-white shadow rounded-lg p-6">
+          {/* Generate Proof - Disabled */}
+          <div className="bg-white shadow rounded-lg p-6 opacity-50">
             <h3 className="text-lg font-medium text-gray-900 mb-4">Generate Eligibility Proof</h3>
             
-            <form onSubmit={handleGenerateProof} className="space-y-4">
-              <div>
-                <label htmlFor="proofProjectName" className="block text-sm font-medium text-gray-700 mb-2">
-                  Project Name
-                </label>
-                <input
-                  type="text"
-                  id="proofProjectName"
-                  value={proofProjectName}
-                  onChange={(e) => setProofProjectName(e.target.value)}
-                  required
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
-                  placeholder="Enter project name"
-                />
-              </div>
-              
-              {hasProjectProof !== undefined && proofProjectName && (
-                <div className={`p-3 rounded ${hasProjectProof ? 'bg-green-50' : 'bg-yellow-50'}`}>
-                  <p className={`text-sm ${hasProjectProof ? 'text-green-800' : 'text-yellow-800'}`}>
-                    {hasProjectProof 
-                      ? '✓ You already have a proof for this project' 
-                      : 'No proof generated yet for this project'
-                    }
-                  </p>
-                </div>
-              )}
-              
-              <button
-                type="submit"
-                disabled={isGeneratingProof || isConfirming || !proofProjectName || hasProjectProof}
-                className="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {isGeneratingProof || isConfirming ? (
-                  <div className="flex items-center">
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
-                    {isGeneratingProof ? 'Generating Proof...' : 'Confirming Transaction...'}
-                  </div>
-                ) : hasProjectProof ? (
-                  'Proof Already Generated'
-                ) : (
-                  'Generate Proof'
-                )}
-              </button>
-            </form>
-            
-            <div className="mt-4 p-3 bg-gray-50 rounded">
-              <p className="text-xs text-gray-600">
-                Generate a cryptographic proof that you meet the project requirements. This proof can be used to participate in the project without revealing your personal details.
+            <div className="p-4 bg-yellow-50 rounded-lg">
+              <p className="text-sm text-yellow-800">
+                <strong>Feature Currently Disabled</strong>
+              </p>
+              <p className="text-sm text-yellow-700 mt-1">
+                The proof generation feature is not available in the current contract version. 
+                You can still check eligibility for projects.
               </p>
             </div>
           </div>
