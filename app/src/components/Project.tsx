@@ -7,7 +7,6 @@ import { COUNTRY_CODES } from '../config/fhe'
 export default function Project() {
   const [userAddress, setUserAddress] = useState('')
   const [minAge, setMinAge] = useState('')
-  const [allowedCountries, setAllowedCountries] = useState<string[]>([])
   const [requiresPassport, setRequiresPassport] = useState(false)
   const [selectedCountries, setSelectedCountries] = useState<string[]>([])
 
@@ -70,7 +69,24 @@ export default function Project() {
         <div className="flex items-center space-x-3 mb-6">
           <div>
             <h2 className="text-lg font-bold text-white mb-2">PROJECT ELIGIBILITY CHECKER</h2>
-            <p className="text-cyan-400 text-sm">VERIFY USER ELIGIBILITY FOR PROJECT PARTICIPATION</p>
+          </div>
+        </div>
+        
+        {/* Prominent Notice */}
+        <div className="alert-tech alert-tech-info border-2 border-cyan-400/50 bg-cyan-900/20">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <div className="w-2 h-2 rounded-full bg-cyan-400 mt-2 animate-pulse"></div>
+            </div>
+            <div>
+              <h3 className="font-bold text-cyan-300 mb-2 text-lg">🔐 AUTHORIZED PARTICIPANTS ONLY</h3>
+              <p className="text-sm text-white leading-relaxed mb-2">
+                <strong>Authorized project participants can CHECK USER ELIGIBILITY</strong> using advanced Zama FHE (Fully Homomorphic Encryption) technology.
+              </p>
+              <p className="text-sm text-cyan-100 leading-relaxed">
+                ✨ <strong>Privacy Guaranteed:</strong> You can only verify eligibility status (YES/NO) - user's specific KYC information remains completely encrypted and hidden.
+              </p>
+            </div>
           </div>
         </div>
       </div>

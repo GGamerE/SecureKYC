@@ -326,12 +326,12 @@ export default function UnifiedVerifyPanel({ userAddress }: UnifiedVerifyPanelPr
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Create Project Requirements */}
           <div className="card-tech p-4 border-cyan-500/30">
-            <h3 className="text-sm font-semibold text-white mb-4">CREATE NEW PROJECT</h3>
+            <h3 className="text-sm font-semibold text-white mb-4">AUTHORIZE PROJECT</h3>
             
             <form onSubmit={handleCreateProject} className="space-y-6">
               <div className="form-tech">
                 <label htmlFor="projectName" className="form-label-tech">
-                  PROJECT NAME
+                  PROJECT ADDRESS
                 </label>
                 <input
                   type="text"
@@ -344,17 +344,22 @@ export default function UnifiedVerifyPanel({ userAddress }: UnifiedVerifyPanelPr
                 />
               </div>
 
-              <div className="alert-tech alert-tech-info">
-                <div className="flex items-start space-x-3">
-                  <div>
-                    <h4 className="font-semibold mb-2">SIMPLIFIED PROJECT SETUP</h4>
-                    <p className="text-sm opacity-90 leading-relaxed">
-                      Creating a project registers your address as a project verifier on the blockchain. 
-                      KYC eligibility requirements will be specified during user verification requests using encrypted protocols.
-                    </p>
-                  </div>
-                </div>
-              </div>
+              <div className="alert-tech alert-tech-info border-2 border-cyan-400/50 bg-cyan-900/20">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <div className="w-2 h-2 rounded-full bg-cyan-400 mt-2 animate-pulse"></div>
+            </div>
+            <div>
+              <h3 className="font-bold text-cyan-300 mb-2 text-lg">🔐 AUTHORIZED PARTICIPANTS ONLY</h3>
+              <p className="text-sm text-white leading-relaxed mb-2">
+                <strong>Authorized project participants can CHECK USER ELIGIBILITY</strong> using advanced Zama FHE (Fully Homomorphic Encryption) technology.
+              </p>
+              <p className="text-sm text-cyan-100 leading-relaxed">
+                ✨ <strong>Privacy Guaranteed:</strong> You can only verify eligibility status (YES/NO) - user's specific KYC information remains completely encrypted and hidden.
+              </p>
+            </div>
+          </div>
+        </div>
 
               <div className="mt-8">
                 <button
@@ -369,7 +374,7 @@ export default function UnifiedVerifyPanel({ userAddress }: UnifiedVerifyPanelPr
                       <span>{isSubmitting ? 'CREATING PROJECT...' : 'CONFIRMING ON BLOCKCHAIN...'}</span>
                     </div>
                   ) : (
-                    <span>INITIALIZE PROJECT</span>
+                    <span>AUTHORIZE PROJECT</span>
                   )}
                 </button>
               </div>
