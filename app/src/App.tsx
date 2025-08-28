@@ -136,7 +136,13 @@ function App() {
                 )
               )}
               {activeTab === 'project' && (
-                <Project />
+                fheInstance ? (
+                  <Project fheInstance={fheInstance} />
+                ) : (
+                  <div className="card-tech p-6 text-center">
+                    <p className="text-gray-300 text-sm">INITIALIZE FHE TO ACCESS PROJECT FEATURES</p>
+                  </div>
+                )
               )}
             </div>
           </div>

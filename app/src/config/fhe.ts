@@ -4,7 +4,7 @@ import { initSDK } from '@zama-fhe/relayer-sdk/bundle';
 export const initFHE = async () => {
   try {
     await initSDK()
-    const config = { ...SepoliaConfig, network: window.ethereum };
+    const config = { ...SepoliaConfig };
     return await createInstance(config);
   } catch (error) {
     console.error('Failed to initialize FHE instance:', error);

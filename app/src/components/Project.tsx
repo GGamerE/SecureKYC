@@ -1,18 +1,27 @@
-import { useState } from 'react'
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useState, useEffect } from 'react'
+import { useAccount, useWalletClient, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
 import { SecureKYCABI } from '../contracts/SecureKYC'
 import { CONTRACT_ADDRESS } from '../config/wagmi'
 import { COUNTRY_CODES } from '../config/fhe'
+import type { FhevmInstance } from '@zama-fhe/relayer-sdk/bundle'
 
-export default function Project() {
+interface ProjectProps {
+  fheInstance: FhevmInstance
+}
+
+export default function Project({ fheInstance }: ProjectProps) {
   const [userAddress, setUserAddress] = useState('')
   const [minAge, setMinAge] = useState('')
   const [requiresPassport, setRequiresPassport] = useState(false)
   const [selectedCountries, setSelectedCountries] = useState<string[]>([])
-
+  const [eligibilityResult, setEligibilityResult] = useState<boolean | null>(null)
+  
+  const { address } = useAccount()
+  const { data: walletClient } = useWalletClient()
   const { writeContract, data: hash, isPending } = useWriteContract()
-  const { isLoading: isConfirming, isSuccess: isConfirmed } = 
-    useWaitForTransactionReceipt({ hash })
+  const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ 
+    hash 
+  })
 
   const handleCountryToggle = (countryName: string) => {
     setSelectedCountries(prev => {
@@ -32,6 +41,8 @@ export default function Project() {
       return
     }
 
+    setEligibilityResult(null)
+
     try {
       // Convert selected country names to country codes
       const countryCodes = selectedCountries.map(countryName => 
@@ -43,15 +54,93 @@ export default function Project() {
         return
       }
       
+      // Call the contract using writeContract
       writeContract({
         address: CONTRACT_ADDRESS,
         abi: SecureKYCABI,
         functionName: 'checkEligibility',
         args: [userAddress as `0x${string}`, parseInt(minAge), countryCodes, requiresPassport]
       })
+      
     } catch (error) {
       console.error('Error checking eligibility:', error)
       alert('Failed to check eligibility. Please try again.')
+    }
+  }
+
+  // Effect to handle transaction completion and decryption
+  useEffect(() => {
+    if (isConfirmed && hash && walletClient && address && userAddress) {
+      handleDecryptResult()
+    }
+  }, [isConfirmed, hash, walletClient, address, userAddress, fheInstance])
+
+  const handleDecryptResult = async () => {
+    try {
+      if (!walletClient || !address) return
+      
+      // Get the encrypted result from the contract using the new view method
+      const encryptedResult = await walletClient.readContract({
+        address: CONTRACT_ADDRESS,
+        abi: SecureKYCABI,
+        functionName: 'getCheckEligibilityResult',
+        args: [address, userAddress as `0x${string}`],
+      }) as string
+
+      if (!encryptedResult || encryptedResult === '0x') {
+        console.error('No encrypted result found')
+        return
+      }
+      
+      // Decrypt the result using FHE user decryption
+      const keypair = fheInstance.generateKeypair()
+      const handleContractPairs = [{
+        handle: encryptedResult,
+        contractAddress: CONTRACT_ADDRESS,
+      }]
+      
+      const startTimeStamp = Math.floor(Date.now() / 1000).toString()
+      const durationDays = "1"
+      const contractAddresses = [CONTRACT_ADDRESS]
+
+      const eip712 = fheInstance.createEIP712(
+        keypair.publicKey,
+        contractAddresses,
+        startTimeStamp,
+        durationDays
+      )
+
+      const signature = await walletClient.signTypedData({
+        domain: {
+          name: eip712.domain.name,
+          version: eip712.domain.version,
+          chainId: eip712.domain.chainId,
+          verifyingContract: eip712.domain.verifyingContract as `0x${string}`,
+        },
+        types: {
+          UserDecryptRequestVerification: eip712.types.UserDecryptRequestVerification,
+        },
+        primaryType: 'UserDecryptRequestVerification',
+        message: eip712.message,
+      })
+
+      const decryptionResult = await fheInstance.userDecrypt(
+        handleContractPairs,
+        keypair.privateKey,
+        keypair.publicKey,
+        signature.replace("0x", ""),
+        contractAddresses,
+        address,
+        startTimeStamp,
+        durationDays,
+      )
+
+      const isEligible = decryptionResult[encryptedResult] as boolean
+      setEligibilityResult(isEligible)
+      
+    } catch (error) {
+      console.error('Error decrypting result:', error)
+      alert('Failed to decrypt eligibility result. Please try again.')
     }
   }
 
@@ -60,6 +149,7 @@ export default function Project() {
     setMinAge('')
     setSelectedCountries([])
     setRequiresPassport(false)
+    setEligibilityResult(null)
   }
 
   return (
@@ -218,19 +308,58 @@ export default function Project() {
         </div>
       </div>
 
-      {/* Success Message */}
+      {/* Transaction Success Message */}
       {isConfirmed && (
         <div className="alert-tech alert-tech-success">
           <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <div className="w-3 h-3 rounded-full mt-1 bg-green-400 animate-pulse"></div>
+            </div>
             <div>
               <h3 className="font-semibold mb-2 text-lg">ELIGIBILITY CHECK COMPLETED</h3>
               <p className="text-sm opacity-90 leading-relaxed">
-                The eligibility check has been successfully processed on the blockchain. 
-                The result indicates whether the user meets the specified project requirements.
+                The eligibility check transaction has been successfully processed on the blockchain using FHE encryption. 
+                The encrypted result is now available for authorized decryption.
               </p>
               <div className="mt-4">
                 <p className="text-xs text-gray-300">
                   Transaction Hash: <span className="font-mono text-cyan-400">{hash}</span>
+                </p>
+                <p className="text-xs text-gray-300 mt-1">
+                  User: <span className="font-mono text-cyan-400">{userAddress}</span>
+                </p>
+              </div>
+              <div className="mt-3 p-3 bg-blue-900/20 border border-blue-400/30 rounded-lg">
+                <p className="text-xs text-blue-300">
+                  <strong>Processing:</strong> The encrypted eligibility result is now being decrypted using FHE user decryption. 
+                  Please wait for the decryption process to complete...
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Eligibility Result (for future implementation) */}
+      {eligibilityResult !== null && (
+        <div className={`alert-tech ${eligibilityResult ? 'alert-tech-success' : 'alert-tech-error'}`}>
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <div className={`w-3 h-3 rounded-full mt-1 ${eligibilityResult ? 'bg-green-400' : 'bg-red-400'} animate-pulse`}></div>
+            </div>
+            <div>
+              <h3 className="font-semibold mb-2 text-lg">
+                {eligibilityResult ? '✅ ELIGIBLE' : '❌ NOT ELIGIBLE'}
+              </h3>
+              <p className="text-sm opacity-90 leading-relaxed">
+                {eligibilityResult 
+                  ? 'The user meets all the specified project requirements and is eligible to participate.'
+                  : 'The user does not meet the specified project requirements and is not eligible to participate.'
+                }
+              </p>
+              <div className="mt-4">
+                <p className="text-xs text-gray-300">
+                  User: <span className="font-mono text-cyan-400">{userAddress}</span>
                 </p>
               </div>
             </div>

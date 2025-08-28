@@ -162,14 +162,32 @@ export const SecureKYCABI = [
       }
     ],
     "name": "checkEligibility",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "internalType": "address",
+        "name": "project",
+        "type": "address"
+      },
+      {
+        "internalType": "address",
+        "name": "user",
+        "type": "address"
+      }
+    ],
+    "name": "getCheckEligibilityResult",
     "outputs": [
       {
         "internalType": "ebool",
-        "name": "eligible",
+        "name": "",
         "type": "bytes32"
       }
     ],
-    "stateMutability": "nonpayable",
+    "stateMutability": "view",
     "type": "function"
   },
   {
