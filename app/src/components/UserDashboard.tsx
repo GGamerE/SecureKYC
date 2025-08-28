@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { useReadContract, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useReadContract } from 'wagmi'
 import { useWalletClient } from 'wagmi'
 import { SecureKYCABI } from '../contracts/SecureKYC'
 import { CONTRACT_ADDRESS } from '../config/wagmi'
@@ -13,7 +13,6 @@ interface UserDashboardProps {
 }
 
 export default function UserDashboard({ fheInstance, userAddress }: UserDashboardProps) {
-  const [eligibilityProjectName, setEligibilityProjectName] = useState('')
   const [isDecrypting, setIsDecrypting] = useState(false)
   const [decryptedData, setDecryptedData] = useState<{
     passportNumber?: string
@@ -40,9 +39,6 @@ export default function UserDashboard({ fheInstance, userAddress }: UserDashboar
   })
 
 
-  const { writeContract, data: hash } = useWriteContract()
-  const { isSuccess: isConfirmed } = 
-    useWaitForTransactionReceipt({ hash })
   const { data: walletClient } = useWalletClient()
 
 
@@ -73,7 +69,7 @@ export default function UserDashboard({ fheInstance, userAddress }: UserDashboar
       console.log('Requesting user signature...')
       const signature = await walletClient.signTypedData({
         account: userAddress,
-        domain: eip712.domain,
+        domain: eip712.domain as any,
         types: {
           UserDecryptRequestVerification: eip712.types.UserDecryptRequestVerification,
         },
@@ -118,28 +114,6 @@ export default function UserDashboard({ fheInstance, userAddress }: UserDashboar
     }
   }
 
-  const handleCheckEligibility = async (e: React.FormEvent) => {
-    e.preventDefault()
-    
-    if (!userAddress || !eligibilityProjectName) return
-
-    try {
-      // For demo purposes, using example eligibility parameters
-      // In a real app, these would come from the project's requirements
-      const minAge = 18
-      const allowedCountries = [1, 2, 3] // Example country codes
-      const requiresPassport = true
-      
-      writeContract({
-        address: CONTRACT_ADDRESS,
-        abi: SecureKYCABI,
-        functionName: 'checkEligibility',
-        args: [userAddress, minAge, allowedCountries, requiresPassport]
-      })
-    } catch (error) {
-      console.error('Error checking eligibility:', error)
-    }
-  }
 
   return (
     <div className="space-y-8 slide-in-up">
@@ -272,81 +246,28 @@ export default function UserDashboard({ fheInstance, userAddress }: UserDashboar
         )}
       </div>
 
-      {/* Project Interaction Cards */}
+      {/* Project Participation Info */}
       {verificationStatus && verificationStatus[0] && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Check Eligibility */}
-          <div className="card-tech p-4 border-cyan-500/30">
-            <h3 className="text-sm font-semibold text-white mb-4">CHECK PROJECT ELIGIBILITY</h3>
-            
-            <form onSubmit={handleCheckEligibility} className="space-y-6">
-              <div className="form-tech">
-                <label htmlFor="eligibilityProjectName" className="form-label-tech">
-                  PROJECT NAME (DEMO)
-                </label>
-                <input
-                  type="text"
-                  id="eligibilityProjectName"
-                  value={eligibilityProjectName}
-                  onChange={(e) => setEligibilityProjectName(e.target.value)}
-                  required
-                  className="form-input-tech"
-                  placeholder="ENTER PROJECT IDENTIFIER"
-                />
-              </div>
-              
-              <button
-                type="submit"
-                disabled={!eligibilityProjectName}
-                className="btn-tech w-full glow-cyan pulse-glow"
-                style={{ width: '100%' }}
-              >
-                <span>VERIFY ELIGIBILITY</span>
-              </button>
-            </form>
-            
-            <div className="mt-6 alert-tech alert-tech-info">
-              <div className="flex items-start space-x-3">
-                <div>
-                  <p className="text-xs opacity-90 leading-relaxed">
-                    This will check if you meet the project requirements using encrypted computation without revealing your personal information.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Generate Proof - Disabled */}
-          <div className="card-tech p-6 border-gray-500/30 opacity-50">
-            <h3 className="text-lg font-semibold text-white mb-6">GENERATE ELIGIBILITY PROOF</h3>
-            
-            <div className="alert-tech alert-tech-warning">
-              <div className="flex items-start space-x-3">
-                <div>
-                  <h4 className="font-semibold mb-2">FEATURE CURRENTLY DISABLED</h4>
-                  <p className="text-sm opacity-90 leading-relaxed">
-                    The proof generation feature is not available in the current contract version. 
-                    You can still check eligibility for projects using encrypted protocols.
-                  </p>
-                </div>
+        <div className="card-tech p-6 border-cyan-500/30">
+          <h3 className="text-lg font-semibold text-white mb-4">PROJECT PARTICIPATION</h3>
+          
+          <div className="alert-tech alert-tech-info">
+            <div className="flex items-start space-x-3">
+              <div>
+                <h4 className="font-semibold mb-2">ELIGIBILITY VERIFICATION AVAILABLE</h4>
+                <p className="text-sm opacity-90 leading-relaxed">
+                  Your identity has been verified and you can now participate in projects that require KYC verification. 
+                  Project managers can check your eligibility using encrypted computation without revealing your personal information.
+                </p>
+                <p className="text-sm opacity-90 leading-relaxed mt-2">
+                  Visit the PROJECT tab to check eligibility for specific project requirements.
+                </p>
               </div>
             </div>
           </div>
         </div>
       )}
 
-      {isConfirmed && (
-        <div className="alert-tech alert-tech-success">
-          <div className="flex items-start space-x-3">
-            <div>
-              <h3 className="font-semibold mb-2 text-lg">OPERATION COMPLETED SUCCESSFULLY</h3>
-              <p className="text-sm opacity-90 leading-relaxed">
-                Your transaction has been confirmed on the blockchain using secure FHE protocols.
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
 
       {!verificationStatus?.[0] && verificationStatus !== undefined && (
         <div className="card-tech p-8 border-yellow-500/30">

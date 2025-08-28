@@ -4,6 +4,7 @@ import { useAccount } from 'wagmi'
 import KYCSubmissionForm from './components/KYCSubmissionForm'
 import UnifiedVerifyPanel from './components/UnifiedVerifyPanel'
 import UserDashboard from './components/UserDashboard'
+import Project from './components/Project'
 import { initFHE } from './config/fhe'
 import type { FhevmInstance } from '@zama-fhe/relayer-sdk/bundle'
 import './App.css'
@@ -11,7 +12,7 @@ import './App.css'
 function App() {
   const { address, isConnected } = useAccount()
   const [fheInstance, setFheInstance] = useState<FhevmInstance | null>(null)
-  const [activeTab, setActiveTab] = useState<'submit' | 'verify' | 'dashboard'>('submit')
+  const [activeTab, setActiveTab] = useState<'submit' | 'verify' | 'dashboard' | 'project'>('submit')
   const [isInitializingFHE, setIsInitializingFHE] = useState(false)
 
   const handleInitFHE = async () => {
@@ -101,6 +102,12 @@ function App() {
               >
                 <span>DASHBOARD</span>
               </button>
+              <button
+                onClick={() => setActiveTab('project')}
+                className={`tab-tech ${activeTab === 'project' ? 'active' : ''}`}
+              >
+                <span>PROJECT</span>
+              </button>
             </div>
 
             {/* Tab Content */}
@@ -127,6 +134,9 @@ function App() {
                     <p className="text-gray-300 text-sm">INITIALIZE FHE TO ACCESS DASHBOARD</p>
                   </div>
                 )
+              )}
+              {activeTab === 'project' && (
+                <Project />
               )}
             </div>
           </div>
