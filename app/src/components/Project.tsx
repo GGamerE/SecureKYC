@@ -71,30 +71,44 @@ export default function Project({ fheInstance }: ProjectProps) {
     }
   }
 
-  // Effect to handle transaction completion and decryption
+  // Effect to handle transaction completion and get encrypted result
   useEffect(() => {
-    if (isConfirmed && hash && publicClient && walletClient && address && userAddress) {
-      handleDecryptResult()
+    if (isConfirmed && hash && publicClient && address && userAddress) {
+      handleGetEncryptedResult()
     }
-  }, [isConfirmed, hash, publicClient, walletClient, address, userAddress, fheInstance])
+  }, [isConfirmed, hash, publicClient, address, userAddress])
 
-  const handleDecryptResult = async () => {
+  const handleGetEncryptedResult = async () => {
     try {
-      if (!publicClient || !walletClient || !address) return
+      if (!publicClient || !address) return
       
       // Get the encrypted result from the contract using the new view method
-      const encryptedResult = await publicClient.readContract({
+      const result = await publicClient.readContract({
         address: CONTRACT_ADDRESS,
         abi: SecureKYCABI,
         functionName: 'getCheckEligibilityResult',
         args: [address, userAddress as `0x${string}`],
       }) as string
 
-      if (!encryptedResult || encryptedResult === '0x') {
+      if (!result || result === '0x' || result === '0x0000000000000000000000000000000000000000000000000000000000000000') {
         console.error('No encrypted result found')
         return
       }
       
+      setEncryptedResult(result)
+      
+    } catch (error) {
+      console.error('Error getting encrypted result:', error)
+      alert('Failed to get eligibility result. Please try again.')
+    }
+  }
+
+  const handleDecrypt = async () => {
+    if (!encryptedResult || !walletClient || !address) return
+    
+    setIsDecrypting(true)
+    
+    try {
       // Decrypt the result using FHE user decryption
       const keypair = fheInstance.generateKeypair()
       const handleContractPairs = [{
@@ -144,6 +158,8 @@ export default function Project({ fheInstance }: ProjectProps) {
     } catch (error) {
       console.error('Error decrypting result:', error)
       alert('Failed to decrypt eligibility result. Please try again.')
+    } finally {
+      setIsDecrypting(false)
     }
   }
 
@@ -153,6 +169,7 @@ export default function Project({ fheInstance }: ProjectProps) {
     setSelectedCountries([])
     setRequiresPassport(false)
     setEligibilityResult(null)
+    setEncryptedResult(null)
   }
 
   return (
@@ -332,10 +349,9 @@ export default function Project({ fheInstance }: ProjectProps) {
                   User: <span className="font-mono text-cyan-400">{userAddress}</span>
                 </p>
               </div>
-              <div className="mt-3 p-3 bg-blue-900/20 border border-blue-400/30 rounded-lg">
-                <p className="text-xs text-blue-300">
-                  <strong>Processing:</strong> The encrypted eligibility result is now being decrypted using FHE user decryption. 
-                  Please wait for the decryption process to complete...
+              <div className="mt-3 p-3 bg-green-900/20 border border-green-400/30 rounded-lg">
+                <p className="text-xs text-green-300">
+                  <strong>Success:</strong> The eligibility check has been completed and the encrypted result is stored on-chain.
                 </p>
               </div>
             </div>
@@ -343,27 +359,111 @@ export default function Project({ fheInstance }: ProjectProps) {
         </div>
       )}
 
-      {/* Eligibility Result (for future implementation) */}
+      {/* Encrypted Result Display */}
+      {encryptedResult && (
+        <div className="alert-tech alert-tech-info">
+          <div className="flex items-start space-x-3">
+            <div className="flex-shrink-0">
+              <div className="w-3 h-3 rounded-full mt-1 bg-blue-400 animate-pulse"></div>
+            </div>
+            <div className="flex-1">
+              <h3 className="font-semibold mb-2 text-lg">🔐 ENCRYPTED RESULT READY</h3>
+              <p className="text-sm opacity-90 leading-relaxed mb-3">
+                The eligibility check has been completed and the result is encrypted using FHE. 
+                Click the decrypt button below to reveal the eligibility status.
+              </p>
+              
+              <div className="bg-gray-800/50 border border-gray-600/30 rounded-lg p-3 mb-4">
+                <p className="text-xs text-gray-300 mb-1">Encrypted Handle:</p>
+                <p className="text-xs font-mono text-cyan-400 break-all">{encryptedResult}</p>
+              </div>
+              
+              {!eligibilityResult ? (
+                <button
+                  onClick={handleDecrypt}
+                  disabled={isDecrypting}
+                  className="btn-tech text-sm px-4 py-2 glow-cyan"
+                >
+                  {isDecrypting ? (
+                    <div className="flex items-center">
+                      <div className="animate-spin rounded-full h-3 w-3 border-b-2 border-white mr-2"></div>
+                      <span>DECRYPTING...</span>
+                    </div>
+                  ) : (
+                    <span>🔓 DECRYPT RESULT</span>
+                  )}
+                </button>
+              ) : (
+                <p className="text-xs text-green-400">✅ Result decrypted successfully!</p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Eligibility Result */}
       {eligibilityResult !== null && (
         <div className={`alert-tech ${eligibilityResult ? 'alert-tech-success' : 'alert-tech-error'}`}>
           <div className="flex items-start space-x-3">
             <div className="flex-shrink-0">
               <div className={`w-3 h-3 rounded-full mt-1 ${eligibilityResult ? 'bg-green-400' : 'bg-red-400'} animate-pulse`}></div>
             </div>
-            <div>
-              <h3 className="font-semibold mb-2 text-lg">
-                {eligibilityResult ? '✅ ELIGIBLE' : '❌ NOT ELIGIBLE'}
+            <div className="flex-1">
+              <h3 className="font-semibold mb-3 text-lg">
+                {eligibilityResult ? '✅ USER ELIGIBLE' : '❌ USER NOT ELIGIBLE'}
               </h3>
-              <p className="text-sm opacity-90 leading-relaxed">
+              
+              {/* User Information */}
+              <div className="bg-gray-800/30 border border-gray-600/20 rounded-lg p-4 mb-4">
+                <h4 className="text-sm font-semibold text-white mb-3">VERIFICATION DETAILS</h4>
+                <div className="space-y-2">
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-300">Target User:</span>
+                    <span className="text-xs font-mono text-cyan-400">{userAddress}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-300">Minimum Age Required:</span>
+                    <span className="text-xs text-white">{minAge} years</span>
+                  </div>
+                  <div className="flex justify-between items-start">
+                    <span className="text-xs text-gray-300">Allowed Countries:</span>
+                    <div className="text-xs text-white text-right max-w-xs">
+                      {selectedCountries.slice(0, 5).join(', ')}
+                      {selectedCountries.length > 5 && ` +${selectedCountries.length - 5} more`}
+                    </div>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-xs text-gray-300">Passport Required:</span>
+                    <span className={`text-xs ${requiresPassport ? 'text-green-400' : 'text-gray-400'}`}>
+                      {requiresPassport ? 'Yes' : 'No'}
+                    </span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Verification Result */}
+              <p className="text-sm opacity-90 leading-relaxed mb-4">
                 {eligibilityResult 
                   ? 'The user meets all the specified project requirements and is eligible to participate.'
-                  : 'The user does not meet the specified project requirements and is not eligible to participate.'
+                  : 'The user does not meet one or more of the specified project requirements and is not eligible to participate.'
                 }
               </p>
-              <div className="mt-4">
-                <p className="text-xs text-gray-300">
-                  User: <span className="font-mono text-cyan-400">{userAddress}</span>
-                </p>
+
+              {/* Privacy Protection Notice */}
+              <div className="bg-purple-900/20 border border-purple-400/30 rounded-lg p-4">
+                <div className="flex items-start space-x-3">
+                  <div className="flex-shrink-0 mt-0.5">
+                    <div className="w-2 h-2 rounded-full bg-purple-400"></div>
+                  </div>
+                  <div>
+                    <h5 className="text-xs font-semibold text-purple-300 mb-2">🔐 PRIVACY PROTECTION</h5>
+                    <p className="text-xs text-purple-200 leading-relaxed">
+                      <strong>Zero-Knowledge Verification:</strong> You can only see the eligibility status (YES/NO) for the specified criteria. 
+                      The user's actual age, specific country, passport details, and other personal KYC information remain completely 
+                      encrypted and hidden thanks to Fully Homomorphic Encryption (FHE) technology.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
