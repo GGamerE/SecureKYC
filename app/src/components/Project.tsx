@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useAccount, useWalletClient, useWriteContract, useWaitForTransactionReceipt } from 'wagmi'
+import { useAccount, useWalletClient, useWriteContract, useWaitForTransactionReceipt, usePublicClient } from 'wagmi'
 import { SecureKYCABI } from '../contracts/SecureKYC'
 import { CONTRACT_ADDRESS } from '../config/wagmi'
 import { COUNTRY_CODES } from '../config/fhe'
@@ -15,9 +15,12 @@ export default function Project({ fheInstance }: ProjectProps) {
   const [requiresPassport, setRequiresPassport] = useState(false)
   const [selectedCountries, setSelectedCountries] = useState<string[]>([])
   const [eligibilityResult, setEligibilityResult] = useState<boolean | null>(null)
+  const [encryptedResult, setEncryptedResult] = useState<string | null>(null)
+  const [isDecrypting, setIsDecrypting] = useState(false)
   
   const { address } = useAccount()
   const { data: walletClient } = useWalletClient()
+  const publicClient = usePublicClient()
   const { writeContract, data: hash, isPending } = useWriteContract()
   const { isLoading: isConfirming, isSuccess: isConfirmed } = useWaitForTransactionReceipt({ 
     hash 
@@ -70,17 +73,17 @@ export default function Project({ fheInstance }: ProjectProps) {
 
   // Effect to handle transaction completion and decryption
   useEffect(() => {
-    if (isConfirmed && hash && walletClient && address && userAddress) {
+    if (isConfirmed && hash && publicClient && walletClient && address && userAddress) {
       handleDecryptResult()
     }
-  }, [isConfirmed, hash, walletClient, address, userAddress, fheInstance])
+  }, [isConfirmed, hash, publicClient, walletClient, address, userAddress, fheInstance])
 
   const handleDecryptResult = async () => {
     try {
-      if (!walletClient || !address) return
+      if (!publicClient || !walletClient || !address) return
       
       // Get the encrypted result from the contract using the new view method
-      const encryptedResult = await walletClient.readContract({
+      const encryptedResult = await publicClient.readContract({
         address: CONTRACT_ADDRESS,
         abi: SecureKYCABI,
         functionName: 'getCheckEligibilityResult',
@@ -362,46 +365,6 @@ export default function Project({ fheInstance }: ProjectProps) {
                   User: <span className="font-mono text-cyan-400">{userAddress}</span>
                 </p>
               </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Project Summary */}
-      {(userAddress || minAge || selectedCountries.length > 0) && (
-        <div className="card-tech p-6 border-gray-500/30">
-          <h3 className="text-lg font-semibold text-white mb-4">PROJECT REQUIREMENTS SUMMARY</h3>
-          
-          <div className="space-y-3">
-            {userAddress && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-300">Target User:</span>
-                <span className="text-sm font-mono text-cyan-400">{userAddress.slice(0, 10)}...{userAddress.slice(-8)}</span>
-              </div>
-            )}
-            
-            {minAge && (
-              <div className="flex justify-between items-center">
-                <span className="text-sm text-gray-300">Minimum Age:</span>
-                <span className="text-sm text-white">{minAge} years</span>
-              </div>
-            )}
-            
-            {selectedCountries.length > 0 && (
-              <div className="flex justify-between items-start">
-                <span className="text-sm text-gray-300">Allowed Countries:</span>
-                <div className="text-sm text-white text-right max-w-xs">
-                  {selectedCountries.slice(0, 3).join(', ')}
-                  {selectedCountries.length > 3 && ` +${selectedCountries.length - 3} more`}
-                </div>
-              </div>
-            )}
-            
-            <div className="flex justify-between items-center">
-              <span className="text-sm text-gray-300">Passport Required:</span>
-              <span className={`text-sm ${requiresPassport ? 'text-green-400' : 'text-gray-400'}`}>
-                {requiresPassport ? 'Yes' : 'No'}
-              </span>
             </div>
           </div>
         </div>
