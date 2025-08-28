@@ -38,6 +38,8 @@ contract SecureKYC is SepoliaConfig {
 
     address public admin;
 
+    mapping(address => mapping(address => ebool)) private checkEligibilityResults;
+
     event KYCVerified(address indexed user, address indexed verifier, uint256 timestamp);
     event VerifierAuthorized(address indexed verifier, bool authorized);
     event ProjectRequirementSet(address indexed projectAddress);
@@ -127,13 +129,12 @@ contract SecureKYC is SepoliaConfig {
     /// @param minAge Minimum age requirement
     /// @param allowedCountries Array of allowed country codes
     /// @param requiresPassport Whether passport verification is required
-    /// @return eligible Whether user is eligible (encrypted boolean)
     function checkEligibility(
         address user,
         uint32 minAge,
         uint8[] calldata allowedCountries,
         bool requiresPassport
-    ) external returns (ebool eligible) {
+    ) external {
         if (!userKYCData[user].isVerified) {
             revert UserNotVerified();
         }
@@ -144,6 +145,9 @@ contract SecureKYC is SepoliaConfig {
 
         // Use the stored encrypted KYC data directly
         EncryptedKYCData storage userData = userKYCData[user];
+
+        FHE.allowTransient(userData.birthYear, address(this));
+        FHE.allowTransient(userData.countryCode, address(this));
 
         // Check age requirement
         euint32 currentYear = FHE.asEuint32(uint32(block.timestamp / 365 days + 1970));
@@ -160,19 +164,22 @@ contract SecureKYC is SepoliaConfig {
         }
 
         // Check passport requirement
-        ebool passportEligible = FHE.asEbool(true);
-        if (requiresPassport) {
-            passportEligible = FHE.ne(userData.passportAddress, FHE.asEaddress(address(0)));
+        ebool passportEligible = FHE.asEbool(userData.isVerified);
+        if (!requiresPassport) {
+            passportEligible = FHE.asEbool(true);
         }
 
         // Final eligibility check
-        eligible = FHE.and(FHE.and(ageEligible, countryEligible), passportEligible);
+        ebool eligible = FHE.and(FHE.and(ageEligible, countryEligible), passportEligible);
 
         FHE.allowThis(eligible);
         FHE.allow(eligible, msg.sender);
-        FHE.allow(eligible, user);
 
-        return eligible;
+        checkEligibilityResults[msg.sender][user] = eligible;
+    }
+
+    function getCheckEligibilityResult(address project, address user) public view returns (ebool) {
+        return checkEligibilityResults[project][user];
     }
 
     /// @notice Generate a proof of eligibility for a project
