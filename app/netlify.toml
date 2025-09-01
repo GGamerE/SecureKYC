@@ -1,0 +1,50 @@
+[build]
+  # 构建命令
+  command = "npm run build"
+  # 构建输出目录
+  publish = "dist"
+
+[build.environment]
+  # 设置 Node.js 版本
+  NODE_VERSION = "21"
+
+# 重定向规则，用于 SPA 路由
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200
+
+# Headers 配置，解决 MIME 类型问题
+[[headers]]
+  for = "*.js"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+
+[[headers]]
+  for = "*.mjs"
+  [headers.values]
+    Content-Type = "application/javascript; charset=utf-8"
+
+[[headers]]
+  for = "*.wasm"
+  [headers.values]
+    Content-Type = "application/wasm"
+
+[[headers]]
+  for = "*.css"
+  [headers.values]
+    Content-Type = "text/css; charset=utf-8"
+
+[[headers]]
+  for = "*.json"
+  [headers.values]
+    Content-Type = "application/json; charset=utf-8"
+
+# 安全头部
+[[headers]]
+  for = "/*"
+  [headers.values]
+    X-Content-Type-Options = "nosniff"
+    X-Frame-Options = "DENY"
+    X-XSS-Protection = "1; mode=block"
+    Referrer-Policy = "strict-origin-when-cross-origin"
