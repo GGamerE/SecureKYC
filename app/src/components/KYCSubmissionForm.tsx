@@ -239,7 +239,7 @@ export default function KYCSubmissionForm({ fheInstance, userAddress }: KYCSubmi
             disabled={isSubmitting || isConfirming || !passportNumber || !birthYear}
             className="btn-tech w-full glow-cyan pulse-glow"
             style={{ width: '100%' }}
-            onClick={(e) => {
+            onClick={(_) => {
               console.log('Button clicked!')
               console.log('Button disabled?', isSubmitting || isConfirming || !passportNumber || !birthYear)
               console.log('Disabled reasons:', {
